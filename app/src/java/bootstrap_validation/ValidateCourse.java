@@ -28,8 +28,8 @@ public class ValidateCourse {
      * @param row Array of data for every row in course.csv
      * @return String of errors
      */
-    public static String checkCourse(String[] row){
-        String errors = "";
+    public static ArrayList<String> checkCourse(String[] row){
+        ArrayList<String> errors = new ArrayList<>();
         
         String courseCode = row[0];
         String school = row[1];
@@ -40,50 +40,48 @@ public class ValidateCourse {
         String examEnd = row[6];
         
         if (courseCode.length() > 10){
-            errors += "invalid course code, ";
+            errors.add("invalid course code");
         }
         
         if (checkDuplicateCourseCode (BootstrapController.COURSELIST, courseCode)){
-            errors += "duplicate coursecode, ";
+            errors.add("duplicate coursecode");
         } 
 
         if (!checkTitleIsValid(title)){
-             errors += "invalid course title, ";
+             errors.add("invalid course title");
         }
         boolean temp = checkDescriptionIsValid(desc);
         if (!checkDescriptionIsValid(desc)){
-            errors += "invalid course description, ";
+            errors.add("invalid course description");
         }
         
        
         Date examDateFormat=validDateFormat("yyyyMMdd", examDate);
         if (examDateFormat==null) {
-            errors += "invalid format of exam date, ";
+            errors.add("invalid format of exam date");
         }
         
         Date examStartFormat=validDateFormat("H:mm", examStart);
         if (examStartFormat==null) {
-            errors += "invalid format of exam start time, ";
+            errors.add("invalid format of exam start time");
         }
        
         Date examEndFormat=validDateFormat("H:mm", examEnd);
         if (examEndFormat==null) {
-            errors += "invalid format of exam end time; ";
+            errors.add("invalid format of exam end time");
         }
         
         // to check if end time before start time
         if ((examEndFormat != null) && (examStartFormat != null) ){
             if ( examEndFormat.before(examStartFormat)){
-                errors += "invalid exam start and end time; ";
+                errors.add("invalid exam start and end time");
             }            
         }
         
         
         if (errors.isEmpty()){
             BootstrapController.COURSELIST.add(new Course(courseCode, school, title, desc,examDateFormat,examStartFormat,examEndFormat));
-        }else{
-            errors= errors.substring(0, errors.length()-2 );
-        }        
+        }     
        
         return errors;
     }

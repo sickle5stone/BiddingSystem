@@ -67,7 +67,7 @@ public class UploadUtility {
                             check = zipStream.getNextEntry();
                         }
                         
-                        InputStreamReader isr = new InputStreamReader(zipStream);
+                        InputStreamReader isr = new InputStreamReader(zipStream,"UTF-8");
                         BufferedReader in = new BufferedReader(isr);
                         CSVReader reader = new CSVReader(in);
                         //Hashmap to return to servlet

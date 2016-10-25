@@ -3,26 +3,30 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package servlet;
+package json;
 
-import controller.BidController;
-import controller.SectionStudentController;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import controller.RoundController;
+import is203.JWTException;
+import is203.JWTUtility;
 import java.io.IOException;
 import java.io.PrintWriter;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 /**
  *
- * @author ChenHuiYan and Aloysius 
+ * @author ChenHuiYan and Regan 
  */
-@WebServlet(name = "Student", urlPatterns = {"/StudentServlet"})
-public class StudentServlet extends HttpServlet {
+@WebServlet(name = "JSONStartRoundServlet", urlPatterns = {"/json/start"})
+public class JSONStartRoundServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -41,10 +45,10 @@ public class StudentServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet Student</title>");            
+            out.println("<title>Servlet JSONStartRoundServlet</title>");            
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet Student at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet JSONStartRoundServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -62,8 +66,58 @@ public class StudentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
-        System.out.println("im here");
+        PrintWriter out = response.getWriter();
+        Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+
+        JsonObject error = new JsonObject();
+        error.addProperty("status", "error");
+        String tok = request.getParameter("token");
+
+        JsonObject toReturn = new JsonObject();
+        toReturn.addProperty("status", "success");
+
+        if (tok == null) {
+            out.print(gson.toJson(error));
+        }
+
+        try {
+            // verify that user is valid (throws exception if user is not valid)
+            String username = JWTUtility.verify(tok, "TwoOStubbornCows");
+            JsonArray errors = new JsonArray();
+            
+            String status = RoundController.getStatus();
+            int  roundNum= RoundController.getRound(); 
+
+            if (roundNum==2 && status.equals("inactive")) {
+                errors.add(new JsonPrimitive("round 2 ended"));
+
+            }else if (status.equals("inactive")){
+                RoundController.startRound();
+                
+            }
+            
+            if (errors.size() > 0) {
+                toReturn.addProperty("status", "error");
+                toReturn.add("message", errors);
+            } else {
+                if(RoundController.getStatus().equals("inactive")){ 
+                    errors.add(new JsonPrimitive("Failed to start round"));
+
+                    
+                }else{
+                    toReturn.addProperty("status", "success");
+                    
+                    toReturn.addProperty("round", roundNum);
+                    
+                }
+            }
+            out.print(gson.toJson(toReturn));
+
+        } catch (JWTException e) {
+            out.print(gson.toJson(error));
+        }
+
+        
     }
 
     /**
@@ -77,29 +131,7 @@ public class StudentServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-         
-        HttpSession session = request.getSession();
-    
-       
-        String searchCourse= request.getParameter("SearchCourse");
-        String viewCourse = request.getParameter("ViewCourse");
-        String updateBid = request.getParameter("updateBids");
-        
-    
-             
-        if (searchCourse!=null && searchCourse.equals("yes")){
-            response.sendRedirect("searchCourse.jsp");
-            
-            
-        }else if (viewCourse!=null && viewCourse.equals("yes")){
-            response.sendRedirect("viewCompletedCourse.jsp");
-                
-        }else if (updateBid!=null && updateBid.equals("confirmUpdate")){
-            response.sendRedirect("updateBid.jsp");
-        } 
-        
-        
-        //processRequest(request, response);
+        processRequest(request, response);
     }
 
     /**

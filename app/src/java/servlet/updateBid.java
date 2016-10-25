@@ -6,7 +6,6 @@
 package servlet;
 
 import controller.BidController;
-import controller.SectionStudentController;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.RequestDispatcher;
@@ -19,10 +18,10 @@ import javax.servlet.http.HttpSession;
 
 /**
  *
- * @author ChenHuiYan and Aloysius 
+ * @author AroisuNamae
  */
-@WebServlet(name = "Student", urlPatterns = {"/StudentServlet"})
-public class StudentServlet extends HttpServlet {
+@WebServlet(name = "updateBid", urlPatterns = {"/updateBid"})
+public class updateBid extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -41,10 +40,10 @@ public class StudentServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet Student</title>");            
+            out.println("<title>Servlet updateBid</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet Student at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet updateBid at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -62,8 +61,7 @@ public class StudentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
-        System.out.println("im here");
+        processRequest(request, response);
     }
 
     /**
@@ -77,29 +75,36 @@ public class StudentServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-         
+
         HttpSession session = request.getSession();
-    
-       
-        String searchCourse= request.getParameter("SearchCourse");
-        String viewCourse = request.getParameter("ViewCourse");
-        String updateBid = request.getParameter("updateBids");
-        
-    
-             
-        if (searchCourse!=null && searchCourse.equals("yes")){
-            response.sendRedirect("searchCourse.jsp");
-            
-            
-        }else if (viewCourse!=null && viewCourse.equals("yes")){
-            response.sendRedirect("viewCompletedCourse.jsp");
-                
-        }else if (updateBid!=null && updateBid.equals("confirmUpdate")){
-            response.sendRedirect("updateBid.jsp");
-        } 
-        
-        
-        //processRequest(request, response);
+        String userId = (String) session.getAttribute("student");
+        String courseCode = request.getParameter("courseId");
+        String sectionCode = request.getParameter("sectionId");
+        double newAmt = Double.parseDouble(request.getParameter("newAmt"));
+        System.out.println("new: "+newAmt);
+        double original = Double.parseDouble(request.getParameter("originalBid"));
+        System.out.println(original);
+
+        if (original < newAmt) {
+            if (BidController.checkIfAmountBalanceIsSufficient(userId, newAmt)) {
+                if (BidController.updateBid(userId, newAmt, sectionCode, courseCode)) {
+                    response.sendRedirect("studenthome.jsp");
+                } else {
+                    request.setAttribute("error", "Update failed! Please check your EDollar");
+                    RequestDispatcher rd = request.getRequestDispatcher("updateBid.jsp");
+                    rd.forward(request, response);
+                }
+            } else {
+                request.setAttribute("error", "Update failed! Please check your EDollar");
+                RequestDispatcher rd = request.getRequestDispatcher("updateBid.jsp");
+                rd.forward(request, response);
+            }
+        } else {
+            request.setAttribute("error", "Update failed! Please check your EDollar");
+            RequestDispatcher rd = request.getRequestDispatcher("updateBid.jsp");
+            rd.forward(request, response);
+        }
+
     }
 
     /**

@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.ArrayList;
+import java.util.HashMap;
 import utility.ConnectionManager;
 
 /**
@@ -20,6 +21,85 @@ import utility.ConnectionManager;
  * @author Haseena
  */
 public class CourseDAO {
+    
+    public static HashMap<String, ArrayList<String>> getCourseSectionHashMap(){
+        HashMap<String, ArrayList<String>> toReturn = new HashMap<>();
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = ConnectionManager.getConnection(); 
+            String sql = "Select * from prerequisite order by course_id, prerequisite";
+            stmt = conn.prepareStatement(sql);  
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String courseId = rs.getString("course_id");
+                String sectionId = rs.getString("prerequisite");
+                ArrayList<String> sections = toReturn.get(courseId);
+                if (sections == null){
+                    sections = new ArrayList<>();
+                    sections.add(sectionId);
+                    toReturn.put(courseId,sections);
+                }else{
+                    sections.add(sectionId);
+                    toReturn.put(courseId,sections);
+                }
+
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+            return toReturn;
+        }
+        
+        
+    }
+    
+    
+    /**
+     * Get all courses in database
+     * @return ArrayList of Course objects
+     */
+    public static ArrayList<Course> getAllCourses(){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        ArrayList<Course> toReturn = new ArrayList<>();
+        
+        try {
+            conn = ConnectionManager.getConnection();
+            String sql = "Select * from course order by course_id";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String courseID = rs.getString("course_id");
+                String schoolName = rs.getString("school");
+                String title = rs.getString("title");
+                String description = rs.getString("description");
+
+                Date examDate = rs.getDate("exam_date");
+                
+                String examStart2 = rs.getString("exam_start");
+                Date examStart=Time.valueOf(examStart2);
+                
+                String examEnd2 = rs.getString("exam_end");
+                Date examEnd=Time.valueOf(examEnd2);
+
+                Course course = new Course(courseID, schoolName, title, description, examDate, examStart, examEnd);
+                toReturn.add(course);
+
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+            return toReturn;
+        }
+    }
 
     public static Course getCourseByCourseCode(String courseCode) {
         Connection conn = null;

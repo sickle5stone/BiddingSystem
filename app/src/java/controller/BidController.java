@@ -44,11 +44,11 @@ public class BidController {
 
         // if Round 1, check if course bidded belongs to student's school
         if (round == 1 && !checkIfRoundBidIsOwnSchool(courseCode, userId)) {
-            errors.add("Course does not belong to school.");
+            errors.add("Course does not belong to school");
         }
 
         if (!checkIfAmountBalanceIsSufficient(userId, amt)) {
-            errors.add("Insufficient EDollar Balance.");
+            errors.add("Insufficient EDollar Balance");
         }
 
         if (checkIfBiddedForCourse(courseCode, userId)) {
@@ -77,6 +77,10 @@ public class BidController {
 
         if (!checkMinBidAmount(courseCode, sectionCode, amt)) {
             errors.add("Bid amount less than minimum bid");
+        }
+        
+        if (checkIfCourseEnrolled(userId,courseCode)){
+            errors.add("Already enrolled in course");
         }
 
         if (errors.isEmpty()) {
@@ -371,7 +375,11 @@ public class BidController {
             double bidAfterClearingPrice = BidDAO.getClearingPrice(courseCode, sectionCode, vacancy + 1);
             //retrieve the next highest bid 
             double bidAtClearingPrice = BidDAO.getNextHigherBidAmount(courseCode, sectionCode, bidAfterClearingPrice);
-            return bidAfterClearingPrice;
+            if (bidAtClearingPrice == 0){
+                return bidAfterClearingPrice + 1;
+            }else{
+                return bidAtClearingPrice;
+            }
         }
         // should not reach here
         return 10;
@@ -587,6 +595,32 @@ public class BidController {
     public static void setMinimumBid(String courseCode, String sectionCode, double minBid) {
         SectionMinimumPriceDAO.setMinBid(courseCode, sectionCode, minBid);
     }
+    
+    /**
+     * Check whether user is already enrolled in the course
+     * 
+     * @param userId User Id of student
+     * @aram courseCode Course of bid student is bidding for
+     * 
+     * @return true if student has already enrolled in the course specified
+     */
+    
+    public static boolean checkIfCourseEnrolled(String userId, String courseCode){
+        ArrayList<Bid> sectionList = SectionStudentController.getSectionsByStudentId(userId);
+        //check through the enrolled sections
+        if (sectionList == null || sectionList.isEmpty()){
+            return false;
+        }
+        for (Bid section : sectionList){
+            if (section.getCourseCode().equals(courseCode)){
+                return true;
+            }
+        }
+        
+        return false;
+    }
+            
+            
 }
 
 /* public boolean checkIfCourseIsValid(String courseCode){

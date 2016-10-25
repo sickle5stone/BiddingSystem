@@ -19,33 +19,33 @@ public class ValidatePrereq {
      * @param row Array of data for every row in prerequisite.csv
      * @return String of error messages
      */
-      public static String checkPrereq (String [] row){
+      public static ArrayList<String> checkPrereq (String [] row){
         String courseId = row[0];
         String prereqId = row[1];
          
-        String error =""; // to take in error msg
+        ArrayList<String> errors = new ArrayList<>(); // to take in error msg
         
         if (!checkValidCourseId(courseId)){
-            error += "invalid course, ";
+            errors.add("invalid course");
         }
         
         if (!checkValidPrereqId(prereqId)){
-            error += "invalid prerequisite, ";
+            errors.add("invalid prerequisite");
         }
         if (checkIsDuplicateRecord(courseId, prereqId)){
-            error += "duplicate record, ";
+            errors.add("duplicate record");
         }
         if (!checkBothSameCourse(courseId, prereqId)){
-            error += "invalid course & prerequisite, ";
+            errors.add("invalid course & prerequisite");
         }
         
-        if (error.isEmpty()){
+        if (errors.isEmpty()){
             if (recursiveCheck(courseId, prereqId)){
-                error += "invalid recursive, ";
+                errors.add("invalid recursive");
             }
         }
         
-        if (error.isEmpty()){ // store the course-prereq record if no errors
+        if (errors.isEmpty()){ // store the course-prereq record if no errors
 
             ArrayList<String> prereqs = BootstrapController.PREREQLIST.get(courseId);
             if (prereqs == null){
@@ -56,12 +56,10 @@ public class ValidatePrereq {
             } else {
                 prereqs.add(prereqId);
             }
-        } else {
-            error = error.substring(0, error.length()-2 );                
-        }
+        } 
         
         //System.out.println("MY ERROR IS HERE"+error);
-        return error;
+        return errors;
     }
     /**
      * Method to check if Course Id is valid by checking against list of courses from course.csv

@@ -5,6 +5,7 @@
  */
 package controller;
 
+import bootstrap_validation.BootstrapError;
 import static bootstrap_validation.CommonValidation.CommonValidation;
 import bootstrap_validation.ValidateBid;
 import bootstrap_validation.ValidateCourse;
@@ -69,7 +70,7 @@ public class BootstrapController {
      * A static ERRORLIST which contains all the errors in bootstrapping the
      * files.
      */
-    public static ArrayList<String> ERRORLIST = new ArrayList<>();
+    public static ArrayList<BootstrapError> ERRORLIST = new ArrayList<>();
 
     /**
      * A static BIDLIST which contains all the bid objects.
@@ -82,7 +83,7 @@ public class BootstrapController {
      *
      * @return an arraylist of errors
      */
-    public static ArrayList<String> readAllCsvFiles() {
+    public static ArrayList<BootstrapError> readAllCsvFiles() {
 
         STUDENTLIST = new ArrayList<>();
         COURSELIST = new ArrayList<>();
@@ -110,6 +111,8 @@ public class BootstrapController {
             BootstrapDAO.insertBid(BIDLIST);
             //Set all bids to $10 mininum bid 
             BootstrapDAO.setDefaultBid(COURSESECTION);
+            
+            
         }
         //Start round 1 after bootstrap
         RoundController.setRoundAndStatus(1, "active");
@@ -122,18 +125,19 @@ public class BootstrapController {
      * Does validation of each column in CSV file and proceeds to check
      * bootstrap validation for respective file before returning an arraylist of
      * errors.
-     *
+     *S
      * @param fileName the name of the file to be read
      * @return an arrayLsit of errors
      */
-    public static ArrayList<String> readFiles(String fileName) {
+    public static ArrayList<BootstrapError> readFiles(String fileName) {
         try {
             String[] header = UploadUtility.headerList.get(fileName);
             CSVReader CSVdata = UploadUtility.fileList.get(fileName);
 
             if (header == null || CSVdata == null) {
-                String error = fileName + " is not found.";
-                ERRORLIST.add(error);
+                ArrayList<String> err = new ArrayList<>();
+                err.add(fileName + " is not found.");
+                ERRORLIST.add(new BootstrapError(fileName,"" ,err));
                 return ERRORLIST;
             }
 
@@ -150,40 +154,34 @@ public class BootstrapController {
                 } */
 
                 rowCount++;
-                String errors = CommonValidation(columns, header);
-                boolean isEmptyRow = false;
-                if (errors.equals("skip")) {
-                    errors = "";
-                    isEmptyRow = true;
-                }
-
+                ArrayList<String> errors = CommonValidation(columns, header);
+                
                 // error.isEmpty => means it passes common validation( no blank field) && it is not an empty row
-                if (errors.isEmpty() && !isEmptyRow) {
+                if (errors.isEmpty()) {
                     switch (fileName) {
                         case "student.csv":
-                            errors = ValidateStudent.checkStudent(columns);
+                            errors.addAll(ValidateStudent.checkStudent(columns)) ;
                             break;
                         case "course.csv":
-                            errors = ValidateCourse.checkCourse(columns);
+                            errors.addAll(ValidateCourse.checkCourse(columns));
                             break;
                         case "bid.csv":
-                            errors = ValidateBid.validateBid(columns);
+                            errors.addAll(ValidateBid.validateBid(columns));
                             break;
                         case "prerequisite.csv":
-                            errors = ValidatePrereq.checkPrereq(columns);
+                            errors.addAll(ValidatePrereq.checkPrereq(columns));
                             break;
                         case "section.csv":
-                            errors = ValidateSection.checkSection(columns);
+                            errors.addAll(ValidateSection.checkSection(columns));
                             break;
                         case "course_completed.csv":
-                            errors = ValidateCourseCompleted.checkCourseCompleted(columns);
+                            errors.addAll(ValidateCourseCompleted.checkCourseCompleted(columns));
                             break;
                     }
                 }
 
                 if (!errors.isEmpty()) {
-                    errors = fileName + " row " + rowCount + " " + errors;
-                    ERRORLIST.add(errors);
+                    ERRORLIST.add(new BootstrapError(fileName, ""+rowCount, errors));
                 }
 
             }

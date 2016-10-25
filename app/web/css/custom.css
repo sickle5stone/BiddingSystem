@@ -26,5 +26,9 @@
 }
 
 .navbar {
-    padding-bottom: 10px;
+
+}
+
+.navbar-right{
+    padding-right: 50px;
 }

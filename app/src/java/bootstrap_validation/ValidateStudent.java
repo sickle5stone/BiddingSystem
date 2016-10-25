@@ -7,6 +7,7 @@ package bootstrap_validation;
 
 import controller.BootstrapController;
 import entity.Student;
+import java.util.ArrayList;
 
 /**
  * Class to validate all student related bootstrap data
@@ -18,9 +19,9 @@ public class ValidateStudent {
      * @param row Array of data for every row in student.csv
      * @return String of errors
      */
-    public static String checkStudent (String [] row){
+    public static ArrayList<String> checkStudent (String [] row){
         boolean isValid = true;
-        String errors = "";
+        ArrayList<String> errors = new ArrayList<>();
         String userId = row[0];
         String password = row[1];
         String name = row[2];
@@ -28,26 +29,26 @@ public class ValidateStudent {
         String eDollar = row[4];
         
         if (school.length() > 5){
-            errors += "invalid school, ";
+            errors.add("invalid school");
         }
         
         if (!checkUserIdIsValid(userId)){
-            errors += "invalid userid, ";             
+            errors.add("invalid userid");             
         }
         if (checkDuplicateUserId(userId)){
-            errors += "duplicate userid, ";
+            errors.add("duplicate userid");
         }
         
         if (!checkPasswordIsValid(password)){
-            errors += "invalid password, ";
+            errors.add("invalid password");
         }
         
         if (!checkNameIsValid(name)){
-            errors += "invalid name, ";
+            errors.add("invalid name");
         }
         
         if (!checkEDollarIsValid(eDollar)){
-            errors += "invalid e-dollar, ";
+            errors.add("invalid e-dollar");
         }
         
         if (errors.isEmpty()){
@@ -55,13 +56,12 @@ public class ValidateStudent {
             
             // check if number is more than what the database accepts
             if (dblEDollar > 9999.99){
-                return errors += "invalid e-dollar";
+                errors.add("invalid e-dollar");
+                return errors;
             }
             
             BootstrapController.STUDENTLIST.add(new Student(userId, password, name, school, dblEDollar));
-        }else{
-            errors= errors.substring(0, errors.length()-2 );
-        }        
+        }     
         return errors;
     }
     /**

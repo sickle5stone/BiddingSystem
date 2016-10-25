@@ -25,6 +25,39 @@ import utility.ConnectionManager;
  * @author Aloysius, Cheryl
  */
 public class BidDAO {
+    public static ArrayList<Bid> getAllBids() {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+
+        ArrayList<Bid> bidList = new ArrayList();
+
+        Bid bid = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "select * from bid order by course_id, section_id, amount, user_id";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                String sectionCode = rs.getString("section_id");
+                String courseId = rs.getString("course_id");
+                Double amount = rs.getDouble("amount");
+                String status = rs.getString("status");
+                String userId = rs.getString("user_id");
+                bid = new Bid(userId, courseId, sectionCode, amount, status);
+
+                bidList.add(bid);
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+        return bidList;
+    }
+    
 
     /**
      * Method to retrieve bids by userid from the database
@@ -379,11 +412,13 @@ public class BidDAO {
 
         try {
             conn = ConnectionManager.getConnection();
-            sql = "SELECT COUNT(*) FROM bios_database.bid WHERE course_id = ? AND section_id = ? AND amount = (SELECT MIN(get_min_bid.amount) FROM (SELECT * FROM bios_database.bid WHERE course_id = 'IS100' AND section_id = 'S1' ORDER BY amount DESC LIMIT ? ) AS get_min_bid)";
+            sql = "SELECT COUNT(*) FROM bios_database.bid WHERE course_id = ? AND section_id = ? AND amount = (SELECT MIN(get_min_bid.amount) FROM (SELECT * FROM bios_database.bid WHERE course_id = ? AND section_id = ? ORDER BY amount DESC LIMIT ? ) AS get_min_bid)";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, courseCode);
             stmt.setString(2, sectionCode);
-            stmt.setInt(3, numVacancy);
+            stmt.setString(3, courseCode);
+            stmt.setString(4, sectionCode);
+            stmt.setInt(5, numVacancy);
             rs = stmt.executeQuery();
             rs.next();
             numBids = rs.getInt(1);
@@ -416,7 +451,11 @@ public class BidDAO {
 
         try {
             conn = ConnectionManager.getConnection();
-            sql = "SELECT amount FROM bios_database.bid WHERE course_id = ? AND section_id = ? AND amount > ? LIMIT 1";
+            // sql = "SELECT amount FROM bios_database.bid WHERE course_id = ? AND section_id = ? AND amount > ? LIMIT 1";
+            
+            // sql= "SELECT MIN(get_min_bid.amount) FROM (SELECT * FROM bios_database.bid WHERE course_id = ? AND section_id = ? And amount>? ) AS get_min_bid";
+            
+            sql = "SELECT amount FROM bios_database.bid WHERE course_id = ? AND section_id = ? AND amount > ?  ORDER BY amount ASC LIMIT 1";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, courseCode);
             stmt.setString(2, sectionCode);

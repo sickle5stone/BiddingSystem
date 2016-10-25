@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import utility.ConnectionManager;
 
 /**
@@ -18,6 +19,44 @@ import utility.ConnectionManager;
  */
 
 public class CourseCompleteDAO {
+    /**
+     * 
+     * @return HashMap of with course code as key, and ArrayList of student_id belong to students who have completed the course
+     */
+    public static HashMap<String,ArrayList<String>> getAllCourseCompleted(){
+       Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+        
+        HashMap<String, ArrayList<String>> toReturn  = new HashMap<>();              
+        try{
+            conn = ConnectionManager.getConnection();
+            sql = "select * from course_completed order by course_id, user_id";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+            while(rs.next()){
+                String courseId = rs.getString("course_id");
+                String userId = rs.getString("user_id");
+                
+                ArrayList<String> courseCom = toReturn.get(courseId);
+                if (courseCom == null){
+                    courseCom = new ArrayList<>();
+                    courseCom.add(userId);
+                    toReturn.put(courseId,courseCom);
+                }else{
+                    courseCom.add(userId);
+                    toReturn.put(courseId,courseCom);
+                }
+            }
+        } catch(SQLException e){
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+        
+        return toReturn;
+    }
     
     /**
      * Gets the ArrayList of course codes which are of type String by using the parameter of userId

@@ -100,7 +100,7 @@
                             <td>
                                 <form action="addBidServlet" method="post">
                                     Bid Amount:
-                                    <input type="number" name="amount" required />
+                                    <input type="number" step="0.01" name="amount" required />
                                     <button name="viewSections" value="confirmBid"> Bid </button>
                                     <input type="hidden" name="courseCode" value="<%=courseCode%>">
                                     <input type="hidden" name="sectionCode" value="<%=sectionId%>">
@@ -117,8 +117,20 @@
 
                     </table>
                     <%
+                        } else {
+
+                        out.print("No sections under the course");
+                    %>
+                    <i class='glyphicon glyphicon-heart'></i>
+                    <form action="searchCourse.jsp" method="post">
+                        <button class='btn btn-lg btn-primary'>Back</button> 
+                    </form>
+                    <%
+
                         }
                     %>
+                    
+                    
 
                 </div>
             </div>

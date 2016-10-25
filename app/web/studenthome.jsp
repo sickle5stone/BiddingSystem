@@ -18,12 +18,13 @@ and open the template in the editor.
 
 <html>
     <head>
-        <title>BOSS</title>
+        <title>BIOS</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <link href='css/bootstrap.css' rel='stylesheet'>
         <link href='css/custom.css' rel='stylesheet'>
+        <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
 
 
     </head>
@@ -39,46 +40,112 @@ and open the template in the editor.
                 ArrayList<String> bidFailMessages = (ArrayList<String>) session.getAttribute("bidFailMessages");
 
                 if (bidFailMessages != null) {
-                    out.println("Bid Fail!");
-        %>
+                    %>
+                    <script type="text/javascript">    
+                        $(window).load(function(){
+                            $('#myModal').modal('show');
+                        });
+                    </script>
+
+                        
+        
+                    <%
+                            
+                    
+                    String e  = bidFailMessages.toString();
+                    %>
+<!--            <div class="alert alert-danger">
+              <strong><%="Bid Failed! "%></strong><%=e%>
+            </div>          -->
         <br>
-        <%
-            for (String error : bidFailMessages) {
-                out.println(error);
-        %>
 
         <br>   
 
         <%
-                }
 
             } else if (bidSuccessMessage != null) {
-                out.println(bidSuccessMessage);
-            }
-            session.removeAttribute("bidSuccessMessage");
-            session.removeAttribute("bidFailMessages");
+%>
+                <div class="alert alert-success">
+                    <strong>Bid Successful!</strong>
+                  </div>
+  <%
+                }
+            
 
             BidController bd = new BidController();
             ArrayList<Bid> bids = bd.getBidsByStudent(userId);
             ArrayList<Bid> sectionList = SectionStudentController.getSectionsByStudentId(userId);
-
-
+            String e = "";
+            
         %> 
+        
+        
 
-        
-        
-        
+                    <!-- Modal -->
+                    <div id="myModal" class="modal fade" role="dialog">
+                      <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title"><%
+                                if (bidFailMessages != null) {
+                                    out.println("Bid Failed!");
+                                    e = bidFailMessages.toString();
+                                }
+                                else if (bidSuccessMessage != null){
+                                    out.println("Bid Successful!");
+                                }
+                            %></h4>
+                          </div>
+                          <div class="modal-body">
+                              <p>
+                                <%
+                                if (bidFailMessages != null) {
+                                    for (String s : bidFailMessages){
+                                        out.println("<div class=\"alert alert-danger\">");
+                                        out.println(s);
+                                        out.println("</div>");
+                                    }
+                                }
+                                else if (bidSuccessMessage != null){
+                                    out.println("Bid SUCCESSFUL");
+                                }
+                                %>
+                              </p>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>    
+
+<%
+session.removeAttribute("bidSuccessMessage");
+            session.removeAttribute("bidFailMessages");
+
+%>
             
-            
-             
-        
+
+
+
         <div class="navbar">
             <div class="container form-inline">
                 <a href='/app/studenthome.jsp' class='navbar-brand'>
-                <img src="./images/test2.png" alt="Image" id="logo" class="img-responsive pull-left" />
+                    <img src="./images/logo4.png" alt="Image" id="logo" class="img-responsive pull-left" />
                 </a>
             </div>
+
+            <ul class='navbar-right'> 
+                <form action="logout" method="post">
+                    <input type="submit" value="Logout" class="btn btn-lg btn-warning" />
+                </form>  
+            </ul>
         </div>
+
 
         <div class='container-fluid'>
 
@@ -92,8 +159,7 @@ and open the template in the editor.
                                 <h3 class="panel-title">User Information</h3>
                             </div>
                             <div class="panel-body">
-                                <%
-                                    Student stu = StudentController.retrieveStudent(userId);
+                                <%                                    Student stu = StudentController.retrieveStudent(userId);
                                     if (stu != null) {
                                         String sch = stu.getSchool();
                                         double eDollar = stu.geteDollar();
@@ -128,11 +194,12 @@ and open the template in the editor.
 
 
                 <div class="span10">
-                    <div class='col-md-10'> 
-                        <% if (RoundController.getStatus().equals("active")) { %>
+                    <div class='col-md-10'/> 
+                    <% if (RoundController.getStatus().equals("active")) { %>
 
-                        <!-- <h1>Current Bids</h1> 
-                        <p class='lead'> -->
+                    <!-- <h1>Current Bids</h1> 
+                    <p class='lead'> -->
+                    <div class='col-md-10'> 
                         <div class="panel panel-primary panel-table">
                             <div class="panel-heading">
                                 <h3 class="panel-title">Current Bids</h3>
@@ -186,21 +253,22 @@ and open the template in the editor.
 
 
 
-                    <div class='col-md-10 '>   
 
+                    <div class='col-md-10'>   
                         <div class="panel panel-primary panel-table">
                             <div class="panel-heading">
                                 <h3 class="panel-title">Enrollment</h3>
                             </div>
                             <div class="panel-body"> 
-
-                                <table border='1' class='table table-bordered '>
-                                    <tr>
-                                        <th>Course Code</th>
-                                        <th>Section Id</th>
-                                        <th>Bid Amount</th>
-                                        <th>Status</th>
-                                    </tr>
+                                <table border='1' class='table table-bordered'>
+                                    <thead class="thead-inverse">
+                                        <tr>
+                                            <th>Course Code</th>
+                                            <th>Section Id</th>
+                                            <th>Bid Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
 
                                     <%
                                         if (sectionList != null || !sectionList.isEmpty()) {
@@ -218,10 +286,10 @@ and open the template in the editor.
                                     %>
 
                                     <tr>
-                                        <td> <%out.println(SECcourseCode);%> </td>
-                                        <td> <%out.println(SECsectionCode);%> </td>
-                                        <td> <%out.println(SECbidAmount);%> </td>
-                                        <td> <%out.println(SECstatus);%> </td>
+                                        <td><%=SECcourseCode%></td>
+                                        <td><%=SECsectionCode%> </td>
+                                        <td><%=SECbidAmount%> </td>
+                                        <td><%=SECstatus%> </td>
                                         <td>
                                             <form action="dropSectionServlet" method="post">
                                                 <button class='btn' name="dropSection" value="confirmDrop"> Drop 
@@ -232,56 +300,67 @@ and open the template in the editor.
                                             </form>
                                         </td>
                                     <tr/>
+                                    <% }
+                                        }//end bid loop 
+
+                                    } else{%> 
                                 </table>
+
                             </div> <!-- end div body -->
                         </div> <!-- end div panel -->
+                    </div>
 
-                        <% }
-                            }//end bid loop 
 
-                        } else{%>  
-                        <h1>Bidding Results</h1> 
-                        <p class='lead'> 
-                        <table border='1' class='table table-bordered'>
-                            <tr>
-                                <th>Course Code</th>
-                                <th>Section Id</th>
-                                <th>Bid Amount</th>
-                                <th>Minimum Bid</th>
-                                <th>Status</th>
-                            </tr>
-                            <%
+                    <div class='col-md-10'>             
+                        <div class="panel panel-primary panel-table">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Bidding Results</h3>
+                            </div>
+                            <div class="panel-body"> 
 
-                                if (bids != null || !bids.isEmpty()) {
-                                    for (Bid b : bids) {
-                                        String courseCode = b.getCourseCode();
-                                        String sectionCode = b.getSectionCode();
-                                        double bidAmount = b.getBidAmount();
-                                        String status = b.getBidStatus();
-                                        double minBid = BidController.getMinimumBid(courseCode, sectionCode);
+                                <table border='1' class='table table-bordered'>
+                                    <thead class="thead-inverse">
+                                        <tr>
+                                            <th>Course Code</th>
+                                            <th>Section Id</th>
+                                            <th>Bid Amount</th>
+                                            <th>Minimum Bid</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <%
 
-                            %>
-                            <tr>
-                                <td><% out.println(courseCode); %></td>
-                                <td><% out.println(sectionCode); %></td>
-                                <td><% out.println(bidAmount); %></td>
-                                <td><% out.println(minBid); %></td>
-                                <td><% out.println(status); %></td>
-                            </tr>
-                            <%
-                                    }
-                                }
-                            %>
-                        </table>
+                                        if (bids != null || !bids.isEmpty()) {
+                                            for (Bid b : bids) {
+                                                String courseCode = b.getCourseCode();
+                                                String sectionCode = b.getSectionCode();
+                                                double bidAmount = b.getBidAmount();
+                                                String status = b.getBidStatus();
+                                                double minBid = BidController.getMinimumBid(courseCode, sectionCode);
+
+                                    %>
+                                    <tr>
+                                        <td><% out.println(courseCode); %></td>
+                                        <td><% out.println(sectionCode); %></td>
+                                        <td><% out.println(bidAmount); %></td>
+                                        <td><% out.println(minBid); %></td>
+                                        <td><% out.println(status); %></td>
+                                    </tr>
+                                    <%
+                                            }
+                                        }
+                                    %>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
                 <%}
-                            }%> 
+                    }%> 
 
 
 
-                </table>
 
             </div>
 
@@ -289,20 +368,9 @@ and open the template in the editor.
 
 
 
-    </div>
-
-
-
-
-    <div class='col-md-10'></div>
-
-
-
-</div>
-
-<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'></script>
-<script src='js/bootstrap.js'></script>
-</body>
+        
+        <script src='js/bootstrap.js'></script>
+    </body>
 
 
 </html>

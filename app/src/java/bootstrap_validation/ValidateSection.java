@@ -24,8 +24,8 @@ public class ValidateSection {
      * @param row Array of data for every row in section.csv
      * @return String of errors
      */
-    public static String checkSection(String[] row) {
-        String errorMsgs = "";
+    public static ArrayList<String> checkSection(String[] row) {
+        ArrayList<String> errors = new ArrayList<>();
         ArrayList<Course> courses = BootstrapController.COURSELIST;
         String courseCode = row[0];
         String section = row[1];
@@ -39,16 +39,18 @@ public class ValidateSection {
         Date endTime = null;
         int dayOfWeek = 0;
         if (!checkIfInvalidCourse(courses, courseCode)) {
-            errorMsgs += "invalid course, ";
+            errors.add("invalid course");
         }
         //check section only if course is valid
-        if (errorMsgs.isEmpty()) {   
-           
-            errorMsgs += checkIfSectionValid(section);
+        if (errors.isEmpty()) {   
+            String sectError = checkIfSectionValid(section);
+            if(sectError != null){
+                errors.add(sectError);
+            }
         }
         dayOfWeek = checkIfInvalidDay(day);
         if (dayOfWeek == 0) {
-            errorMsgs += "invalid day, ";
+            errors.add("invalid day");
         }
 
         //Check if startTime follows the correct format
@@ -56,7 +58,7 @@ public class ValidateSection {
             startTime = isTimeFormatValid("H:mm", examStartTime);
 
         } catch (ParseException e) {
-            errorMsgs += "invalid start, ";  // start time doesn't follow the format
+            errors.add("invalid start");  // start time doesn't follow the format
         }
 
         //check if the endTime is in the correct format
@@ -64,29 +66,40 @@ public class ValidateSection {
             endTime = isTimeFormatValid("H:mm", examEndTime);
             //check if exam end time is later than exam start time
             if (endTime.before(startTime)) {
-                errorMsgs += "invalid end, ";
+                errors.add("invalid end");
             }
         } catch (ParseException e) {
             // endTime doesn't follow the format
-            errorMsgs += "invalid end, ";  
+            errors.add("invalid end");  
         }
-        errorMsgs += isValidInstructor(instructorName);
-        errorMsgs += isValidVenue(venueName);
+        String instruError = isValidInstructor(instructorName); // returns string error, or null object if no error
+        String venueError = isValidVenue(venueName); // returns string error, or null object if no error
+        
+        if (instruError != null){
+            errors.add(instruError);
+        }
+        
+        if (venueError != null){
+            errors.add(venueError);
+        }
         
         if (!venueIsNotOccupied(venueName, dayOfWeek, startTime, endTime)){
-            errorMsgs += "venue occupied, ";
+            errors.add("venue occupied");
         }
-        errorMsgs += isValidSize(sectionSize);
+        String sizeError = isValidSize(sectionSize);
+        if (sizeError!= null){
+            errors.add(sizeError);
+        }
         
         
-        if (errorMsgs.isEmpty()){
+        if (errors.isEmpty()){
 
             if (checkDuplicatedRecord(BootstrapController.COURSESECTION, courseCode, section)){
-                errorMsgs += "duplicate section, ";
+                errors.add("duplicate section");
             }
         }
         
-        if(errorMsgs.isEmpty()){
+        if(errors.isEmpty()){
             
             int sectionSizeNum = Integer.parseInt(sectionSize);
             HashMap<String, ArrayList<Section>> sectionList=BootstrapController.COURSESECTION;
@@ -103,14 +116,11 @@ public class ValidateSection {
             }
             
             
-        }else{
-            //if there is any error ,return string eliminating the ', ' 
-            errorMsgs = errorMsgs .substring(0,errorMsgs .length()-2);
         }
         
-        return errorMsgs;
+        return errors;
 
-    }
+    }   
 
    /* public static String venueClashWithOtherSections(String venue, Date startTime, Date endTime, int day) {
         HashMap<String, ArrayList<Section>> list = BootstrapController.COURSESECTION;
@@ -196,10 +206,9 @@ public class ValidateSection {
     public static String checkIfSectionValid(String sectionId) {
         //check whether section input is more than what database can store
         if (sectionId.length() > 3){
-            return "invalid section, ";
+            return "invalid section";
         }
         
-        String toReturn = "";
         char firstChar = sectionId.charAt(0);
         if (firstChar == 'S') {
             String digits = sectionId.substring(1);
@@ -209,14 +218,14 @@ public class ValidateSection {
                 int remainingNumbersInSectionId = Integer.parseInt(digits);
 
             } catch (NumberFormatException e) {
-                toReturn += "invalid section, ";
+                return "invalid section";
             }
             //If the char does not start with 'S'
         } else {
-            toReturn += "invalid section, ";
+            return "invalid section";
         }
 
-        return toReturn;
+        return null;
 
     }
     /**
@@ -244,12 +253,11 @@ public class ValidateSection {
      * @return empty string if instructor is valid else return error message, "invalid instructor"
      */
     public static String isValidInstructor(String instructorName) {
-        String toReturn = "";
         if (instructorName.length() > 100) {
-            toReturn += "invalid instructor, ";
+            return "invalid instructor";
         }
 
-        return toReturn;
+        return null;
     }
     /**
      * Method to check if venue is valid
@@ -257,11 +265,10 @@ public class ValidateSection {
      * @return empty string if venue is valid else return error message, "invalid venue"
      */
     public static String isValidVenue(String venue) {
-        String toReturn = "";
         if (venue.length() > 100) {
-            toReturn += "invalid venue, ";
+            return "invalid venue";
         }
-        return toReturn;
+        return null;
     }
     /**
      * Method to check if venue is not occupied by another section at the same time and date
@@ -303,9 +310,8 @@ public class ValidateSection {
      */    
     public static String isValidSize(String size) {
         if (size.length() > 2){
-            return "invalid size, ";
+            return "invalid size";
         }
-        String toReturn = "";
         boolean isValid = true;
         for (int i = 0; i < size.length(); i++) {
             char ch = size.charAt(i);
@@ -315,9 +321,9 @@ public class ValidateSection {
             }
         }
         if (!isValid) {
-            toReturn += "invalid size, ";
+            return "invalid size";
         }
-        return toReturn;
+        return null;
     }
 
 }

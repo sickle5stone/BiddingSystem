@@ -1,5 +1,7 @@
 package bootstrap_validation;
 
+import java.util.ArrayList;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -17,19 +19,15 @@ public class CommonValidation {
      * @param header Header of column of data
      * @return String of errors
      */    
-    public static String CommonValidation(String[] row, String[] header){
-        String errors = "";
-        boolean allIsEmpty = true;
+    public static ArrayList<String> CommonValidation(String[] row, String[] header){
+        ArrayList<String> errors = new ArrayList<>();
         for(int i=0; i<row.length; i++){
             //To handle the extra spaces in the field
             String field=row[i];
             row[i] = row[i].trim();
             if(field.isEmpty()){
-                errors += "blank ["+header[i]+"]";                
-            } else {
-                // the moment on field contains a value, allIsEmpty is set to false
-                allIsEmpty = false;
-            }            
+                errors.add("blank ["+header[i]+"]") ;                
+            }           
         }
         
         /*if (allIsEmpty){

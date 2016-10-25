@@ -24,23 +24,23 @@ public class ValidateCourseCompleted {
      * @param row Array of data for every row in coursecompleted.csv
      * @return String of errors
      */
-    public static String checkCourseCompleted(String[] row){
-        String errors = "";
+    public static ArrayList<String> checkCourseCompleted(String[] row){
+        ArrayList<String> errors = new ArrayList<>();
         String userId=row[0];
         String courseCode=row[1];
       
         if (!checkValidStudent(BootstrapController.STUDENTLIST, userId)){
-            errors += "invalid userid, ";            
+            errors.add("invalid userid");            
         }
         if (!checkValidCourse(BootstrapController.COURSELIST, courseCode)){
-            errors += "invalid code, ";            
+            errors.add("invalid code");            
         }
 
         if (errors.isEmpty()) {
             
             if (!completedPrereq(userId, courseCode)){
                 // add error message if student did not complete prereq for the course
-                errors += "invalid course completed, ";
+                errors.add("invalid course completed");
             }else {
                 // if student complete prereq of the course, add course into coursecomplete list
                 
@@ -48,10 +48,6 @@ public class ValidateCourseCompleted {
             }
         } 
         
-        if(!errors.isEmpty()){
-            errors= errors.substring(0, errors.length()-2 );        
-        }
-
         return errors;
     
     }        

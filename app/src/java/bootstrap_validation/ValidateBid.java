@@ -22,8 +22,8 @@ public class ValidateBid {
      * @param oneBid Array of data for every row in bid.csv
      * @return String of errors
      */
-    public static String validateBid(String[] oneBid) {
-        String errorMsg = "";
+    public static ArrayList<String> validateBid(String[] oneBid) {
+        ArrayList<String> errors = new ArrayList<>();
         String selectedUserId = oneBid[0];
         String selectedAmount = oneBid[1];
         String selectedCourseId = oneBid[2];
@@ -36,56 +36,56 @@ public class ValidateBid {
         
         //Check if userID is found in student arraylist from bootstrap controller
         if (!checkIfUserIdValid(selectedUserId)) {
-            errorMsg += "invalid userid, ";
+            errors.add("invalid userid");
         }
         //Amount should be not more than 2 decimal places and be a positive number, else insert error Msg
         if (!checkIfAmountIsValid(selectedAmount)){
-            errorMsg += "invalid amount, ";
+            errors.add("invalid amount");
         }
         //The course code must be found in the course list, else return errorMsg
         if (!checkIfCourseIsValid(selectedCourseId)) {
-            errorMsg += "invalid code, ";            
+            errors.add("invalid code");            
             //checks sectionIsValid only if valid courseCode
         }else if(!checkIfSectionIsValid(selectedSectionId, selectedCourseId)){
-            errorMsg += "invalid section, ";
+            errors.add("invalid section");
         }
         
        
         // bootstrap always happens during round 1. Get student and check if it is round 1 always 
        if (!checkIfRoundBidIsOwnSchool(selectedUserId, selectedCourseId)){
-            errorMsg += "not own school course, ";
+            errors.add("not own school course");
        }
         
         if (!checkIfClassTimeTableClash(selectedUserId,selectedCourseId,selectedSectionId)){
-           errorMsg += "class timetable clash, ";
+           errors.add("class timetable clash");
         }
         
         // if student hasnt bidded for the course before, check for exam time table
         if (existingBid == null){
             if (!checkIfExamTimeTableClash(selectedUserId, selectedCourseId)){
-                errorMsg+= "exam timetable clash, ";            
+                errors.add("exam timetable clash");            
             }
         }
         
         if (!checkPrereq(selectedUserId, selectedCourseId)){
-            errorMsg+= "incomplete prerequisites, ";            
+            errors.add("incomplete prerequisites");            
         }
                
         if (checkCourseAlreadyCompleted(selectedUserId, selectedCourseId)){
-            errorMsg += "already completed, ";
+            errors.add("already completed");
         }
         
         if (checkSectionLimitReached(selectedUserId, selectedSectionId)){
-            errorMsg+= "section limit reached, ";
+            errors.add("section limit reached");
         }        
         // check and deduct only if passes all validation
-        if (errorMsg.isEmpty()){
+        if (errors.isEmpty()){
             double amount=Double.parseDouble(selectedAmount);
             if (existingBid != null){
                 // there is an existing bid take into account balance after refund
                 double existingBidAmt = existingBid.getBidAmount();
                 if (!checkEDollarBalance(selectedUserId,amount-existingBidAmt)){
-                    errorMsg += "not enough e-dollar, ";
+                    errors.add("not enough e-dollar");
                 }else{
                     // sufficient edoller remove old bid, add new bid, update edollar
                     deleteBid(selectedUserId, selectedCourseId);  
@@ -95,21 +95,14 @@ public class ValidateBid {
                     
                 // when there is no existing bids
             } else if (!checkEDollarBalance(selectedUserId,amount)){
-                errorMsg += "not enough e-dollar, ";
+                errors.add("not enough e-dollar");
             } else{
                 // not new bid & have sufficient edollar & update edollar
                 BootstrapController.BIDLIST.add(new Bid(selectedUserId, selectedCourseId, selectedSectionId, amount, "PENDING"));
                 minusEDollar( selectedUserId, amount);
             }           
-        }
-        
-        
-        if(!errorMsg.isEmpty()){
-            
-            errorMsg = errorMsg.substring(0, errorMsg.length()-2 );        
-        }
-        
-        return errorMsg;
+        }              
+        return errors;
     }
     /**
      * minusEDollar method to allow deduct of edollar

@@ -22,7 +22,35 @@ import utility.ConnectionManager;
  *
  */
 public class SectionStudentDAO {
+    public static ArrayList<Bid> getAllSectionStudent(){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+        ArrayList<Bid> returnList = new ArrayList<>();
 
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "SELECT * FROM section_student ORDER BY `course_id` ASC, `user_id` ASC";
+            stmt = conn.prepareStatement(sql);
+            
+            rs = stmt.executeQuery();
+            while(rs.next()){
+                String sectionCode = rs.getString("section_id");
+                String courseId = rs.getString("course_id");
+                Double amount = rs.getDouble("amount");
+                String userId = rs.getString("user_id");
+                String status = rs.getString("status");
+                returnList.add(new Bid(userId,courseId,sectionCode,amount,status));                
+            }
+            
+        }catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+        return returnList;
+    }
     /**
      * Gets the Bid object by using the parameters of sectionId,courseCode and
      * userId

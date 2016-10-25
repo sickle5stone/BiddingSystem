@@ -4,6 +4,7 @@
     Author     : Huiyan and Regan 
 --%>
 
+<%@page import="bootstrap_validation.BootstrapError"%>
 <%@page import="controller.RoundController"%>
 <%@page import="java.util.ArrayList"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -16,15 +17,15 @@
 
         String userId = (String) session.getAttribute("admin"); 
         if (userId != null){
-            out.print("Welcome! " + userId.toUpperCase());
+            out.print("Welcome! " + userId.toUpperCase() + "<br>");
         } else {
             response.sendRedirect("loginpage.jsp");
         }
      %> 
  <%
-      ArrayList <String> err = (ArrayList<String>)request.getAttribute("errorList");
+      ArrayList <BootstrapError> err = (ArrayList<BootstrapError>)request.getAttribute("errorList"); 
       if (err != null){
-          for (String error : err){
+          for (BootstrapError error : err){
               out.print(error + "<br>");
           }
       }
