@@ -1,7 +1,6 @@
 <%-- 
     Document   : addBid
-    Created on : Oct 4, 2016, 4:04:08 PM
-    Author     : Haseena
+    Author     : Haseena and Regan
 --%>
 
 <%@page import="java.util.ArrayList"%>
@@ -15,8 +14,8 @@
     <body>
         <h1>Add Bid</h1>
         <form method="POST" action="addBidServlet">
-            CourseCode: <input type="text" name="courseCode" value="C001" /><br/>
-            SectionCode: <input type="text" name="sectionCode" value="S1" /><br/>
+            Course Code: <input type="text" name="courseCode" value="C001" /><br/>
+            Section Code: <input type="text" name="sectionCode" value="S1" /><br/>
             Bid Amount: <input type="text" name="amount" value="20" /><br/>
             <input type="submit" value="Submit" />
         </form>

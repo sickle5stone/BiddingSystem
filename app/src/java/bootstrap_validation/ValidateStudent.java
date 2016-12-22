@@ -22,15 +22,16 @@ public class ValidateStudent {
     public static ArrayList<String> checkStudent (String [] row){
         boolean isValid = true;
         ArrayList<String> errors = new ArrayList<>();
+        
+        if (row.length < 5){
+            return errors;
+        }
+        
         String userId = row[0];
         String password = row[1];
         String name = row[2];
         String school = row[3];
         String eDollar = row[4];
-        
-        if (school.length() > 5){
-            errors.add("invalid school");
-        }
         
         if (!checkUserIdIsValid(userId)){
             errors.add("invalid userid");             
@@ -55,7 +56,7 @@ public class ValidateStudent {
             double dblEDollar = Double.parseDouble(eDollar);
             
             // check if number is more than what the database accepts
-            if (dblEDollar > 9999.99){
+            if (dblEDollar > 999999.99){
                 errors.add("invalid e-dollar");
                 return errors;
             }
@@ -83,7 +84,7 @@ public class ValidateStudent {
      */
     public static boolean checkDuplicateUserId(String userId){
                
-        for (Student stu: BootstrapController.STUDENTLIST){
+        for(Student stu: BootstrapController.STUDENTLIST){
             if (stu.getUserId().equals(userId)){
                return true;
             }

@@ -11,8 +11,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import controller.RoundController;
-import is203.JWTException;
-import is203.JWTUtility;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -20,13 +18,12 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import static json.JsonCommonValidation.checkToken;
 
 /**
- *
- * @author ChenHuiYan
+ * Method to handle JSON requests for stop round
+ * @author ChenHuiYan and Haseena
  */
-
-
 @WebServlet(name = "JSONStopRoundServlet", urlPatterns = {"/json/stop"})
 public class JSONStopRoundServlet extends HttpServlet {
 
@@ -72,49 +69,52 @@ public class JSONStopRoundServlet extends HttpServlet {
         Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 
         JsonObject error = new JsonObject();
-        error.addProperty("status", "error");
         String tok = request.getParameter("token");
-
         JsonObject toReturn = new JsonObject();
-        toReturn.addProperty("status", "success");
+        JsonArray errors = new JsonArray();
 
-        if (tok == null) {
-            out.print(gson.toJson(error));
+        if(tok==null){
+            toReturn.addProperty("status", "error");
+            errors.add(new JsonPrimitive("invalid request object"));
+            toReturn.add("message", errors);
+            out.print(gson.toJson(toReturn)); 
+            return;
+            
         }
-
-        try {
-            // verify that user is valid (throws exception if user is not valid)
-            String username = JWTUtility.verify(tok, "TwoOStubbornCows");
-            boolean roundActive = false;
-
-            JsonArray errors = new JsonArray();
-
-//Checks if the round is active and is in round 2
-            if (!RoundController.stopRound()) {
-                errors.add(new JsonPrimitive("round already ended"));
-
-            }
-
-            String status = RoundController.getStatus();
-
-            if (status.equals("active")) {
-                errors.add(new JsonPrimitive("Failed to stop round"));
-
-            }
-
-            if (errors.size() > 0) {
-                toReturn.addProperty("status", "error");
-                toReturn.add("message", errors);
-            } else {
-                toReturn.addProperty("status", "success");
-            }
+        
+        if (!checkToken(tok).isEmpty()) {
+                errors.add(new JsonPrimitive((checkToken(tok))));
+        }
+        
+        if (errors.size()>0){  
+            toReturn.addProperty("status", "error");
+            toReturn.add("message", errors);
+            toReturn = JsonCommonValidation.sortJsonArray(toReturn);
             out.print(gson.toJson(toReturn));
+            return;
+        }
+    
 
-        } catch (JWTException e) {
-            out.print(gson.toJson(error));
+    
+        //Checks if the round is active and is in round 2
+        if (!RoundController.stopRound()) {
+            errors.add(new JsonPrimitive("round already ended"));
         }
 
-       
+        String status = RoundController.getStatus();
+
+        if (status.equals("active")) {
+            errors.add(new JsonPrimitive("Failed to stop round"));
+
+        }
+
+        if (errors.size() > 0) {
+            toReturn.addProperty("status", "error");
+            toReturn.add("message", errors);
+        } else {
+            toReturn.addProperty("status", "success");
+        }
+        out.print(gson.toJson(toReturn));
     }
 
     /**
@@ -128,9 +128,7 @@ public class JSONStopRoundServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
-        
-       
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**

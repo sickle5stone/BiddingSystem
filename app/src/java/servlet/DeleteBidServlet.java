@@ -6,10 +6,8 @@
 package servlet;
 
 import controller.BidController;
-import entity.Bid;
 import java.io.IOException;
 import java.io.PrintWriter;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,8 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- *
- * @author Cheryl
+ * Servlet class to handle all requests pertaining to delete bid
+ * @author Cheryl, Regan
  */
 @WebServlet(name = "DeleteBidServlet", urlPatterns = {"/DeleteBidServlet"})
 public class DeleteBidServlet extends HttpServlet {
@@ -62,7 +60,7 @@ public class DeleteBidServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**
@@ -76,7 +74,6 @@ public class DeleteBidServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
         HttpSession session = request.getSession();
         String dropBid= request.getParameter("dropBid");
         if(dropBid!=null && dropBid.equals("confirmDrop")){
@@ -86,9 +83,7 @@ public class DeleteBidServlet extends HttpServlet {
            if (username != null & courseId != null & sectionId != null){
                 boolean isDeleted = BidController.deleteBidFromStudent(username,courseId,sectionId);
                 if (!isDeleted){
-                    RequestDispatcher view = request.getRequestDispatcher("message.jsp");
-                    request.setAttribute("msg", "Failed to delete bid.");
-                    view.forward(request, response);
+                    response.sendRedirect("studenthome.jsp"); 
                 }else {
                     response.sendRedirect("studenthome.jsp");                    
                 }

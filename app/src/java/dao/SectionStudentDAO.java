@@ -22,6 +22,92 @@ import utility.ConnectionManager;
  *
  */
 public class SectionStudentDAO {
+    /**
+     * Method to retrieve all enrolled students in a particular section of a course
+     * @param courseCode course code
+     * @param sectionCode section code of course
+     * @return Arraylist of bids belonging to students that are enrolled
+     */
+    public static ArrayList<Bid> getStudentEnrolledBySection(String courseCode, String sectionCode) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+
+        ArrayList<Bid> sectionList = new ArrayList();
+
+        Bid bid = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "select * from section_student where course_id =? and section_id=? ORDER BY user_id ASC";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, courseCode);
+            stmt.setString(2, sectionCode);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                String sectionId = rs.getString("section_id");
+                String courseId = rs.getString("course_id");
+                String userId = rs.getString("user_id");
+                Double amount = rs.getDouble("amount");
+                // String status=rs.getString("status");
+                bid = new Bid(userId, courseId, sectionCode, amount, "success");
+
+                sectionList.add(bid);
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+        return sectionList;
+    }
+    
+    /**
+     * Method to retrieve all enrolled students in a particular section of a course for json ordering
+     * @param courseCode course code
+     * @param sectionCode section code of course
+     * @return Arraylist of bids belonging to students that are enrolled
+     */
+    public static ArrayList<Bid> getStudentEnrolledBySectionJson(String courseCode, String sectionCode) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+
+        ArrayList<Bid> sectionList = new ArrayList();
+
+        Bid bid = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "select * from section_student where course_id =? and section_id=? ORDER BY amount desc, user_id ASC";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, courseCode);
+            stmt.setString(2, sectionCode);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                String sectionId = rs.getString("section_id");
+                String courseId = rs.getString("course_id");
+                String userId = rs.getString("user_id");
+                Double amount = rs.getDouble("amount");
+                // String status=rs.getString("status");
+                bid = new Bid(userId, courseId, sectionCode, amount, "success");
+
+                sectionList.add(bid);
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+        return sectionList;
+    }
+
+    /**
+     * Method to retrieve all students who are enrolled
+     * @return Arraylist of bids belonging to students who are enrolled
+     */
     public static ArrayList<Bid> getAllSectionStudent(){
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -122,7 +208,7 @@ public class SectionStudentDAO {
                 String courseId = rs.getString("course_id");
                 Double amount = rs.getDouble("amount");
                 // String status=rs.getString("status");
-                bid = new Bid(userId, courseId, sectionCode, amount, "SUCCESS");
+                bid = new Bid(userId, courseId, sectionCode, amount, "success");
 
                 sectionListByuserId.add(bid);
             }
@@ -175,7 +261,12 @@ public class SectionStudentDAO {
         }
         return noError;
     }
-
+    /**
+     * Method to retrieve the number of students who are enrolled in a particular section of a course
+     * @param courseCode course code
+     * @param sectionCode section code belonging to a particular code
+     * @return number of students who are enrolled in a particular section of a course
+     */
     public static int getNumEnrolledInSection(String courseCode, String sectionCode) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -202,7 +293,13 @@ public class SectionStudentDAO {
         }
         return numEnrolled;
     }
-
+    /**
+     * Method to insert all successful bids into section student table
+     * @param courseCode course code
+     * @param sectionId section id belonging to a particular course
+     * @param userId userId of student
+     * @param bidAmount bid amount
+     */
     public static void insertSuccessfulBids(String courseCode, String sectionId, String userId, double bidAmount) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -229,5 +326,73 @@ public class SectionStudentDAO {
         }
 
     }
+    /**
+     * Method to check if a student is enrolled in a specified course
+     * @param userid userid of student
+     * @param courseCode course code
+     * @return true if student is enrolled in a course else return false
+     */
+    public static boolean isEnrolled(String userid,String courseCode){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
 
+        Bid bid = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "select * from section_student where user_id = ? and course_id =?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, userid);
+            stmt.setString(2, courseCode);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e);
+            return false;
+
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+        return false;
+
+    }
+    
+    /**
+     * Retrieve the lowest successful bid amount 
+     * @param courseCode course code
+     * @param sectionCode  section code of given course code
+     * @return the lowest successful bid amount
+     */
+    public static double getLowestSuccessBidAmount(String courseCode, String sectionCode) {
+        double lowestBidAmount=10;
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "SELECT amount FROM bios_database.section_student  WHERE course_id = ? AND section_id = ? ORDER BY amount ASC LIMIT 1";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, courseCode);
+            stmt.setString(2, sectionCode);
+            rs = stmt.executeQuery();
+            rs.next();
+            lowestBidAmount = rs.getDouble(1);
+
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+
+        return lowestBidAmount;
+    }
 }
+

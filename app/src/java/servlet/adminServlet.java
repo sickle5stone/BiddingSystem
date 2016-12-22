@@ -13,9 +13,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
- *
+ * Servlet class to handle all requests pertaining to admin functions
  * @author ChenHuiYan and Regan
  */
 @WebServlet(name = "adminServlet", urlPatterns = {"/adminServlet"})
@@ -59,7 +60,7 @@ public class adminServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**
@@ -73,6 +74,7 @@ public class adminServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
         
         String uploadFile= request.getParameter("uploadFile");
        // System.out.println(uploadFile);
@@ -83,6 +85,8 @@ public class adminServlet extends HttpServlet {
             
         }else if(StartEndRound!=null && StartEndRound.equals("startEndRound")){
             RoundController.startEndRound();
+            session.setAttribute("startEndRoundSuccess","Start/End Round Successful!"); 
+           
             response.sendRedirect("adminhome.jsp");
             
             

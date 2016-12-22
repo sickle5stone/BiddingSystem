@@ -18,10 +18,14 @@ import utility.ConnectionManager;
 
 /**
  *A java DAO that access and modifies the Course table in database
- * @author Haseena
+ * @author Haseena and Huiyan
  */
 public class CourseDAO {
     
+    /**
+     * Return pre-requisite order in Hashmap format
+     * @return hashmap format of the course section 
+     */
     public static HashMap<String, ArrayList<String>> getCourseSectionHashMap(){
         HashMap<String, ArrayList<String>> toReturn = new HashMap<>();
         Connection conn = null;
@@ -100,7 +104,11 @@ public class CourseDAO {
             return toReturn;
         }
     }
-
+    /**
+     * Method to retrieve course object by course code
+     * @param courseCode courseCode 
+     * @return Course object if courseCode is valid otherwise return false
+     */
     public static Course getCourseByCourseCode(String courseCode) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -140,7 +148,11 @@ public class CourseDAO {
         }
         return course;
     }
-
+    /**
+     * Method to retrieve all prerequisites for a course
+     * @param courseCode courseCode
+     * @return ArrayList of prerequisites for a particular course
+     */
     public static ArrayList<Course> getPrereqListbyCourseCode(String courseCode) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -172,7 +184,11 @@ public class CourseDAO {
         }
         return preReqCourseCodes;
     }
-
+    /**
+     * Method to retrieve all courses belonging to a school
+     * @param school school name
+     * @return Arraylist of courses belonging to a school
+     */
     public static ArrayList<Course> getCourseBySchool(String school) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -210,7 +226,11 @@ public class CourseDAO {
             return coursesInSchool;
         }
     }
-
+    /**
+     * Method to retrieve all courses that a student has completed
+     * @param userId student's userId
+     * @return ArrayList of courses that student has completed
+     */
     public static ArrayList<Course> getCompletedCoursesbyStudent(String userId) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -248,7 +268,11 @@ public class CourseDAO {
         return studentCompletedCourses;
 
     }
-
+    /**
+     * Method to retrieve Course object using course title
+     * @param courseTitle course title of course
+     * @return Course object if courseTitle is valid otherwise return null
+     */
     public static Course getCourseByCourseTitle(String courseTitle) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -283,7 +307,11 @@ public class CourseDAO {
             return course;
         }
     }
-    
+    /**
+     * Method to retrieve all courses containing specified course title
+     * @param courseTitle Title of course
+     * @return ArrayList of courses containing specified course title
+     */
     public static ArrayList<Course> getCoursesContainingTitle(String courseTitle) {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -321,6 +349,13 @@ public class CourseDAO {
             return courseList;
         }
     }
+    /**
+     * Method to search course based on parameters of course title, course code and school code
+     * @param courseTitle Title of course
+     * @param courseCode Course code
+     * @param schoolCode School Code
+     * @return ArrayList of courses containing the three specified parameters
+     */
      public static ArrayList<Course> searchCourse(String courseTitle, String courseCode, String schoolCode) {
         Connection conn = null;
         PreparedStatement stmt = null;

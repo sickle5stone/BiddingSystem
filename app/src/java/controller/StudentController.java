@@ -26,6 +26,12 @@ import java.util.ArrayList;
 public class StudentController {
     
     //retrieve student's edollar balance based on userId
+
+    /**
+     * Method to retrieve e-dollar balance of student
+     * @param userId userId of student
+     * @return e-dollar balance
+     */
     public static double getEdollarBalance(String userId){
         
         double edollarBal = -1;
@@ -37,6 +43,11 @@ public class StudentController {
     }
     
     //retrieve student's school based on userId
+    /**
+     * Method to retrieve school of student by userId
+     * @param userId userId of student
+     * @return student's school
+     */
     public static String getSchoolById(String userId){
         String schoolName = "";
         
@@ -48,6 +59,11 @@ public class StudentController {
     }
     
     //retrieve student's name based on userId
+    /**
+     * Method to retrieve name of student by user id
+     * @param userId userId of student
+     * @return student's name
+     */
     public static String getNameById(String userId){
         String sName = "";
         
@@ -59,6 +75,12 @@ public class StudentController {
     }
     
     //update student's edollar amount with the amount parameter being the difference from original amount, returns a false value if update operation is unsuccesful
+    /**
+     * Method to student's edollar amount
+     * @param userId userId of student
+     * @param amt amount to be updated
+     * @return true if updated otherwise return false
+     */
     public static boolean updateEdollar(String userId, double amt){
         boolean updateStatus = false;
         
@@ -75,6 +97,11 @@ public class StudentController {
     }
     
     //retrieve Student object based on userId
+    /**
+     * Method to retrieve Student object based on userId
+     * @param userId userId of student
+     * @return Student object if userId is valid else return false
+     */
     public static Student retrieveStudent(String userId){
         
         Student s = StudentDAO.getStudentById(userId);
@@ -83,6 +110,12 @@ public class StudentController {
     }
     
     //check if courseCode has  been completed by student
+    /**
+     * Method to check if student has completed a particular course
+     * @param userId userId of student
+     * @param courseCode courseCode to be checked against
+     * @return true if course has been completed before else return false
+     */
     public static boolean checkCourseCompleted(String userId, String courseCode){
        
         ArrayList<String> courseCompletedList = CourseCompleteDAO.getListOfCourseCompleted(userId);
@@ -95,7 +128,11 @@ public class StudentController {
         return false;
     }
     
-    //
+    /**
+     * Method to all courses completed by a student
+     * @param userId userId of student
+     * @return Arraylist of courses that the student has completed before
+     */
     public static ArrayList<String> getCourseCompleted(String userId){
         
         ArrayList<String> courseCompletedList = null;

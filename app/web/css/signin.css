@@ -2,7 +2,7 @@ body {
   padding-top: 300px;
   padding-bottom: 40px;
   background-color: #eee;
-  background: url(../images/bg.jpg) no-repeat center center fixed;
+  background: url(../images/bg1.jpg) no-repeat center center fixed;
   background-size: cover;
 }
 
@@ -42,3 +42,4 @@ body {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
+

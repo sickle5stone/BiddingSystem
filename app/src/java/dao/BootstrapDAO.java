@@ -5,6 +5,7 @@
  */
 package dao;
 
+import controller.BootstrapController;
 import entity.Bid;
 import entity.Course;
 import entity.Section;
@@ -19,9 +20,10 @@ import utility.ConnectionManager;
 /**
  * Class that handles all the database operations in relation to the bootstrap
  *
- * @author Haseena , Cheryl , Huiyan , Regan , Aloysius
+ * @author Haseena , Cheryl , Huiyan, Aloysius
  */
 public class BootstrapDAO {
+    private static final int BATCHSIZE = 3000;
 
     /**
      * Method to clear database of all previous data
@@ -58,7 +60,7 @@ public class BootstrapDAO {
             stmt.execute();
             return true;
         } catch (SQLException e) {
-            System.out.println(e);
+            e.printStackTrace();
             return false;
         } finally {
             ConnectionManager.close(conn, stmt, null);
@@ -81,21 +83,32 @@ public class BootstrapDAO {
         // Returns an arraylist of completed courseIDs returned by each student
         try {
             conn = ConnectionManager.getConnection();
+            // count for batch processing
+            int count = 0 ;
+            String sql = "INSERT into course_completed values(?,?)";
+            //Prepare statement to input respective parameter values
+            stmt = conn.prepareStatement(sql);
             for (String studentId : students) {
                 ArrayList<String> courseIDs = courseCompleted.get(studentId);
                 for (String eachCourseID : courseIDs) {
-                    String sql = "INSERT into course_completed values(?,?)";
-                    //Prepare statement to input respective parameter values
-                    stmt = conn.prepareStatement(sql);
+                    
                     stmt.setString(1, studentId);
                     stmt.setString(2, eachCourseID);
+                    //add batch 
+                    stmt.addBatch();
+                    count++;
                     //Execute the sql statement
-                    stmt.executeUpdate();
+                    if (count % BATCHSIZE == 0){
+                        stmt.executeBatch();
+                    }else if(count == BootstrapController.getNumElements(courseCompleted)){
+                        stmt.executeBatch();
+                    }
                 }
             }
+            
             //Close the statement and connection
         } catch (SQLException e) {
-            System.out.println(e);
+            e.printStackTrace();
             return false;
         } finally {
             ConnectionManager.close(conn, stmt, null);
@@ -115,9 +128,13 @@ public class BootstrapDAO {
     public static boolean insertStudent(ArrayList<Student> studentsList) {
         Connection conn = null;
         PreparedStatement stmt = null;
+        
         try {
             conn = ConnectionManager.getConnection();
-
+            String sql = "INSERT into student values(?,?,?,?,?)";
+            //Prepare statement to input respective parameter values
+            stmt = conn.prepareStatement(sql);
+            int count = 0;
             for (Student s : studentsList) {
                 // Returns an arraylist of completed courseIDs returned by each student
                 String studentId = s.getUserId();
@@ -125,23 +142,24 @@ public class BootstrapDAO {
                 String name = s.getName();
                 String school = s.getSchool();
                 double eDollar = s.geteDollar();
-
-                String sql = "INSERT into student values(?,?,?,?,?)";
-                //Prepare statement to input respective parameter values
-                stmt = conn.prepareStatement(sql);
                 stmt.setString(1, studentId);
                 stmt.setString(2, password);
                 stmt.setString(3, name);
                 stmt.setString(4, school);
                 stmt.setDouble(5, eDollar);
-
+                stmt.addBatch();
+                count++;
                 //Execute the sql statement
-                stmt.executeUpdate();
+                if (count % BATCHSIZE == 0){
+                    stmt.executeBatch();
+                }else if(count == studentsList.size()){
+                    stmt.executeBatch();
+                }
 
             }
             //Close the statement and connection
         } catch (SQLException e) {
-            System.out.println(e);
+            e.printStackTrace();
             return false;
         } finally {
             ConnectionManager.close(conn, stmt, null);
@@ -162,7 +180,11 @@ public class BootstrapDAO {
         PreparedStatement stmt = null;
         try {
             conn = ConnectionManager.getConnection();
-
+            int count = 0 ;
+            String sql = "INSERT into course values(?,?,?,?,?,?,?)";
+            //Prepare statement to input respective parameter values
+            stmt = conn.prepareStatement(sql);
+            
             for (Course c : coursesList) {
                 // Returns an arraylist of completed courseIDs returned by each student
                 String courseCode = c.getCourseCode();
@@ -173,9 +195,7 @@ public class BootstrapDAO {
                 Date examStart = c.getExamStart();
                 Date examEnd = c.getExamEnd();
 
-                String sql = "INSERT into course values(?,?,?,?,?,?,?)";
-                //Prepare statement to input respective parameter values
-                stmt = conn.prepareStatement(sql);
+                
                 stmt.setString(1, courseCode);
                 stmt.setString(2, schoolTitle);
                 stmt.setString(3, courseTitle);
@@ -187,13 +207,19 @@ public class BootstrapDAO {
                 java.sql.Time sqlExamEnd = new java.sql.Time(examEnd.getTime());
                 stmt.setTime(7, sqlExamEnd);
 
+                stmt.addBatch();
+                count++;
+                
                 //Execute the sql statement
-                stmt.executeUpdate();
-
+                if (count % BATCHSIZE == 0){
+                    stmt.executeBatch();
+                    }else if(count == coursesList.size()){
+                        stmt.executeBatch();
+                    }
             }
             //Close the statement and connection
         } catch (SQLException e) {
-            System.out.println(e);
+            e.printStackTrace();
             return false;
         } finally {
             ConnectionManager.close(conn, stmt, null);
@@ -217,14 +243,16 @@ public class BootstrapDAO {
 
         try {
             conn = ConnectionManager.getConnection();
+            String sql = "INSERT into section values(?,?,?,?,?,?,?,?)";
+            //Prepare statement to input respective parameter values
+            stmt = conn.prepareStatement(sql);
+            
+            int count = 0;
             for (String courseID : courseIDs) {
                 // Returns an arraylist of sections under each course
                 ArrayList<Section> sections = sectionList.get(courseID);
 
                 for (Section section : sections) {
-                    String sql = "INSERT into section values(?,?,?,?,?,?,?,?)";
-                    //Prepare statement to input respective parameter values
-                    stmt = conn.prepareStatement(sql);
                     stmt.setString(1, section.getCourseCode());
                     stmt.setString(2, section.getSection());
                     stmt.setInt(3, section.getDayOfWeek());
@@ -237,13 +265,21 @@ public class BootstrapDAO {
                     stmt.setString(6, section.getInstructor());
                     stmt.setString(7, section.getVenue());
                     stmt.setInt(8, section.getClassSize());
+                    // add to batch
+                    stmt.addBatch();
+                    count++;
+
                     //Execute the sql statement
-                    stmt.executeUpdate();
+                    if (count % BATCHSIZE == 0){
+                        stmt.executeBatch();
+                    }else if(count == BootstrapController.getNumElements(sectionList)){
+                        stmt.executeBatch();
+                    }
                 }
             }
             //Close the statement and connection
         } catch (SQLException e) {
-            System.out.println(e);
+            e.printStackTrace();
             return false;
         } finally {
             ConnectionManager.close(conn, stmt, null);
@@ -262,24 +298,37 @@ public class BootstrapDAO {
 
         try {
             conn = ConnectionManager.getConnection();
+            int count = 0;
+            String sql = "INSERT into section_minimal_price values(?,?,?)";
+            //Prepare statement to input respective parameter values
+            stmt = conn.prepareStatement(sql);
+            
             for (String courseID : courseIDs) {
                 // Returns an arraylist of sections under each course
                 ArrayList<Section> sections = sectionList.get(courseID);
 
                 for (Section section : sections) {
-                    String sql = "INSERT into section_minimal_price values(?,?,?)";
-                    //Prepare statement to input respective parameter values
-                    stmt = conn.prepareStatement(sql);
+                    
                     stmt.setString(1, section.getCourseCode());
                     stmt.setString(2, section.getSection());
                     stmt.setDouble(3, 10);
+                    
+                    
+                    // add to batch
+                    stmt.addBatch();
+                    count++;
+
                     //Execute the sql statement
-                    stmt.executeUpdate();
+                    if (count % BATCHSIZE == 0){
+                        stmt.executeBatch();
+                    }else if(count == BootstrapController.getNumElements(sectionList)){
+                        stmt.executeBatch();
+                    }
                 }
             }
             //Close the statement and connection
         } catch (SQLException e) {
-            System.out.println(e);
+            e.printStackTrace();
             return false;
         } finally {
             ConnectionManager.close(conn, stmt, null);
@@ -302,22 +351,33 @@ public class BootstrapDAO {
         PreparedStatement stmt = null;
         try {
             conn = ConnectionManager.getConnection();
+            int count = 0;
+            String sql = "INSERT into prerequisite values(?,?)";
+            //Prepare statement to input respective parameter values
+            stmt = conn.prepareStatement(sql);
             for (String courseID : courseIDs) {
                 // Returns an arraylist of prerequisites required by each course
                 ArrayList<String> prereqIDs = prereqsList.get(courseID);
                 for (String prereqID : prereqIDs) {
-                    String sql = "INSERT into prerequisite values(?,?)";
-                    //Prepare statement to input respective parameter values
-                    stmt = conn.prepareStatement(sql);
+                    
                     stmt.setString(1, courseID);
                     stmt.setString(2, prereqID);
+                    
+                    // add to batch
+                    stmt.addBatch();
+                    count++;
+
                     //Execute the sql statement
-                    stmt.executeUpdate();
+                    if (count % BATCHSIZE == 0){
+                        stmt.executeBatch();
+                    }else if(count == BootstrapController.getNumElements(prereqsList)){
+                        stmt.executeBatch();
+                    }
                 }
             }
             //Close the statement and connection
         } catch (SQLException e) {
-            System.out.println(e);
+            e.printStackTrace();
             return false;
         } finally {
             ConnectionManager.close(conn, stmt, null);
@@ -340,21 +400,34 @@ public class BootstrapDAO {
         PreparedStatement stmt = null;
         try {
             conn = ConnectionManager.getConnection();
+            String sql = "INSERT INTO bid values(?,?,?,?,?)";
+            //Prepare statement to input respective parameter values
+            stmt = conn.prepareStatement(sql);            
+            int count = 0;
             for (Bid bid : bidList) {
-                String sql = "INSERT INTO bid values(?,?,?,?,?)";
-                //Prepare statement to input respective parameter values
-                stmt = conn.prepareStatement(sql);
+                
                 stmt.setString(1, bid.getUserId());
                 stmt.setDouble(2, bid.getBidAmount());
                 stmt.setString(3, bid.getCourseCode());
                 stmt.setString(4, bid.getSectionCode());
-                stmt.setString(5, "PENDING");
+                stmt.setString(5, "pending");
+                
+                // add to batch
+                stmt.addBatch();
+                count++;
+
                 //Execute the sql statement
-                stmt.executeUpdate();
+                if (count % BATCHSIZE == 0){
+                        stmt.executeBatch();
+                }else if(count == bidList.size()){
+                    stmt.executeBatch();
+                }
             }
             //Close the statement and connection
         } catch (SQLException e) {
-            System.out.println(e);
+            
+            int i = 1;
+            e.printStackTrace();
             return false;
         } finally {
             ConnectionManager.close(conn, stmt, null);
@@ -374,22 +447,34 @@ public class BootstrapDAO {
         PreparedStatement stmt = null;
 
         try {
+            int count = 0;
             conn = ConnectionManager.getConnection();
+            stmt = conn.prepareStatement("INSERT INTO section_minimal_price VALUES(?,?,10)");            
             Set<String> listOfCourses = courseSectionList.keySet();
             for (String cId : listOfCourses) {
                 ArrayList<Section> sectionList = courseSectionList.get(cId);
                 for (Section s : sectionList) {
                     String courseId = s.getCourseCode();
                     String sectionId = s.getSection();
-                    stmt = conn.prepareStatement("INSERT INTO section_minimal_price VALUES(?,?,10)");
+
                     stmt.setString(1, courseId);
                     stmt.setString(2, sectionId);
-                    stmt.executeUpdate();
+                                        
+                    // add to batch
+                    stmt.addBatch();
+                    count++;
+
+                    //Execute the sql statement
+                    if (count % BATCHSIZE == 0){
+                        stmt.executeBatch();
+                    }else if(count == BootstrapController.getNumElements(courseSectionList)){
+                        stmt.executeBatch();
+                    }
                 }
             }
 
         } catch (SQLException e) {
-            System.out.println(e);
+            e.printStackTrace();
         } finally {
             ConnectionManager.close(conn, stmt, null);
         }

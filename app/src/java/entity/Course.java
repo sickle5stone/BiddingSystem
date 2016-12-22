@@ -5,12 +5,11 @@
  */
 package entity;
 
-import java.util.ArrayList;
 import java.util.Date;
 
 /**
  *
- * @author aloysiuslim.2015 , cheryl.lim.2015
+ * @author aloysius , cheryl
  */
 
 /** 

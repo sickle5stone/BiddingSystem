@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- *
+ * Servlet class to handle all requests pertaining to logout
  * @author Cheryl, Aloysius
  */
 @WebServlet(name = "logout", urlPatterns = {"/logout"})
@@ -62,8 +62,7 @@ public class LogOut extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
-        //
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**

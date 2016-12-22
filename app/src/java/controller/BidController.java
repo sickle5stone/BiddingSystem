@@ -9,6 +9,7 @@ import dao.BidDAO;
 import dao.CourseDAO;
 import dao.SectionDAO;
 import dao.SectionMinimumPriceDAO;
+import dao.SectionStudentDAO;
 import dao.StudentDAO;
 import entity.Bid;
 import entity.Course;
@@ -19,11 +20,8 @@ import java.util.Date;
 
 /**
  *
- *
- * @author ChenHuiYan and Haseena
- */
-/**
  * Class that handles all controller operations pertaining to the Bid Controller
+ * @author ChenHuiYan and Haseena
  */
 public class BidController {
 
@@ -44,7 +42,7 @@ public class BidController {
 
         // if Round 1, check if course bidded belongs to student's school
         if (round == 1 && !checkIfRoundBidIsOwnSchool(courseCode, userId)) {
-            errors.add("Course does not belong to school");
+            errors.add("Not own school course");
         }
 
         if (!checkIfAmountBalanceIsSufficient(userId, amt)) {
@@ -63,7 +61,7 @@ public class BidController {
             errors.add("Exam date clashes with another bid");
         }
 
-        if (checkIfClassTimeTableClashes(courseCode, sectionCode, userId)) {
+        if (checkIfClassTimeTableClashes(courseCode, sectionCode, userId, null)) {
             errors.add("Class timetable clashed with another bid");
         }
 
@@ -93,11 +91,28 @@ public class BidController {
                 double clearingPrice = getClearingPriceForRoundTwo(courseCode, sectionCode);
                 BidDAO.roundBidStatusUpdate(courseCode, sectionCode, clearingPrice);
                 double minBid = SectionMinimumPriceDAO.getMinBidAmtByCourseSection(courseCode, sectionCode);
+                
+                Section section = CourseSectionController.getSection(courseCode, sectionCode);
+                int classSize = section.getClassSize();
+                int numEnrolled = SectionStudentController.getNumEnrolledInSection(courseCode, sectionCode);
+                int currentBids = BidDAO.getNumBidsForSection(courseCode, sectionCode);
+                int vacancy = classSize - numEnrolled;
+                int unfilledVacancies = classSize - numEnrolled - currentBids;
                 //if the clearingprice+1 is more than minBid, sets the minimumbid to clearingPrice+1
-                if (clearingPrice + 1 > minBid) {
+                //unfilled less than or equals zero, means that there are same num or more bids than there are vacancy
+                
+                // unfilledVacancies less than 0: means more bids than slots: update min bid
+                // clearing price + 1 bigger than min bid
+                // 
+                double nthBid = getClearingPrice(courseCode, sectionCode, vacancy);
+                
+                if (vacancy == 0 ){
+                    BidDAO.setBidStatus(courseCode,sectionCode,userId,"fail");
+                    //SectionMinimumPriceDAO.setMinBid(courseCode, sectionCode, clearingPrice - 100 );
+                    } else if (unfilledVacancies <= 0 && nthBid + 1 > minBid && vacancy != 0) { 
                     SectionMinimumPriceDAO.setMinBid(courseCode, sectionCode, clearingPrice + 1);
-                }
-            }
+                }    
+            } 
         }
 
         return errors;
@@ -179,13 +194,17 @@ public class BidController {
 
         int currentBids = bids.size();
         // to call studentSection controller
-        int enrollerBids = 0;
-
-        totalBids = currentBids + enrollerBids;
+        
+        int enrolledBids = 0;
+        ArrayList<Bid> sectionsEnrolled = SectionStudentController.getSectionsByStudentId(userId);
+        if (sectionsEnrolled != null){
+            enrolledBids = sectionsEnrolled.size();
+        }
+        
+        totalBids = currentBids + enrolledBids;
 
         // return true if total Bids is less than 5
         return totalBids >= 5;
-
     }
 
     /**
@@ -221,6 +240,24 @@ public class BidController {
                 }
             }
         }
+        // get bid type sections for enrolled
+        ArrayList<Bid> sectionEnrolled = SectionStudentDAO.getSectionsByUserId(userId); 
+
+        for (Bid eachBid : sectionEnrolled) {
+            String eachCourseCode = eachBid.getCourseCode();
+            Course eachCourse = CourseDAO.getCourseByCourseCode(eachCourseCode);
+
+            Date eachExamDate = eachCourse.getExamDate();
+            Date eachExamStart = eachCourse.getExamStart();
+            Date eachExamEnd = eachCourse.getExamEnd();
+
+            if (eachExamDate.equals(examDate)) {
+                if (!(eachExamStart.after(examEnd) || examStart.after(eachExamEnd))) {
+                    // return true if there is a clash
+                    return true;
+                }
+            }
+        }
         // return false if no clash
         return false;
     }
@@ -232,12 +269,11 @@ public class BidController {
      * @param courseCode courseCode of section
      * @param sectionId the sectionId of section
      * @param userId the student's userid
+     * @param existingBid the existing bid if this is an update of bid
      * @return true if the classTimeTable clashes with the ones present in the
      * current bid list
      */
-    public static boolean checkIfClassTimeTableClashes(String courseCode, String sectionId, String userId) {
-        ArrayList<Bid> bids = BidDAO.getBidsByUserId(userId);
-
+    public static boolean checkIfClassTimeTableClashes(String courseCode, String sectionId, String userId, Bid existingBid) {
         Section s = SectionDAO.getSpecificSection(courseCode, sectionId);
         int sectionDay = s.getDayOfWeek();
         //Date sectionStart=s.getStartTime();
@@ -246,8 +282,21 @@ public class BidController {
         // java.sql.Time sqlSectionStart = new java.sql.Time(sectionStart.getTime()); 
 
         Date sectionEnd = s.getEndTime();
-        // java.sql.Time sqlSectionEnd = new java.sql.Time(sectionEnd.getTime()); 
+        
+        ArrayList<Bid> bids = BidDAO.getBidsByUserId(userId);
 
+        if (existingBid != null){
+            String crs = existingBid.getCourseCode();
+            for (int i = 0; i < bids.size() ; i++){
+                Bid b = bids.get(i);
+                if (b.getCourseCode().equals(crs)){
+                    bids.remove(i);
+                    break;
+                }
+            }
+            
+        }
+        
         for (Bid eachBid : bids) {
             String eachSectionId = eachBid.getSectionCode();
             String eachCourseCode = eachBid.getCourseCode();
@@ -267,7 +316,29 @@ public class BidController {
                 }
             }
         }
+        
+        ArrayList<Bid> enrolledBids = SectionStudentDAO.getSectionsByUserId(userId);
 
+        for (Bid eachBid : enrolledBids) {
+            String eachSectionId = eachBid.getSectionCode();
+            String eachCourseCode = eachBid.getCourseCode();
+
+            Section eachSe = SectionDAO.getSpecificSection(eachCourseCode, eachSectionId);
+            int eachSectionDay = eachSe.getDayOfWeek();
+            Date eachSectionStart = eachSe.getStartTime();
+            //java.sql.Time sqlStartTime = new java.sql.Time(eachSectionStart.getTime());
+
+            Date eachSectionEnd = eachSe.getEndTime();
+            //java.sql.Time sqlEndTime = new java.sql.Time(eachSectionEnd.getTime());
+
+            if (eachSectionDay == sectionDay) {
+                if (!(sectionStart.after(eachSectionEnd) || eachSectionStart.after(sectionEnd))) {
+                    // returns true if time table clash
+                    return true;
+                }
+            }
+        }
+        
         return false;
     }
 
@@ -447,6 +518,22 @@ public class BidController {
     }
 
     /**
+     * Method to facilitate the updating of bid through JSON
+     * @param userId student's userId
+     * @param amt bid amount
+     * @param sectionCode the section
+     * @param previousSectionCode previous section code that student bidded
+     * @param courseCode courseCode of section
+     * @return true upon successful delete and add new value of bid into record, otherwise return false
+     */
+    public static boolean jsonUpdateBid(String userId, double amt, String sectionCode, String previousSectionCode ,String courseCode) {
+        //Needs to delete then add new bid.
+        deleteBidFromStudent(userId, courseCode, previousSectionCode);
+        addBid(userId, amt, sectionCode, courseCode);
+        return true;
+    }
+    
+    /**
      * Gets all bids from student using their userId
      *
      * @param userId student's userId
@@ -600,7 +687,7 @@ public class BidController {
      * Check whether user is already enrolled in the course
      * 
      * @param userId User Id of student
-     * @aram courseCode Course of bid student is bidding for
+     * @param courseCode Course of bid student is bidding for
      * 
      * @return true if student has already enrolled in the course specified
      */
@@ -616,26 +703,29 @@ public class BidController {
                 return true;
             }
         }
-        
         return false;
     }
-            
-            
+
+    /**
+     * Get lowest bid amount in database through DAO
+     * @param courseId course code
+     * @param sectionCode section code of the specific course
+     * @return lowest bid amount
+     */
+    public static double getLowestBidAmount(String courseId, String sectionCode){
+        return BidDAO.getLowestBidAmount(courseId, sectionCode);
+    }   
+    
+    /**
+     * Get all records in database through DAO
+     * @param courseId course code
+     * @param sectionId section code of the specific course
+     * @return list of bids by section and course
+     */
+    public static ArrayList<Bid> getAllBidBySectionCourseId(String courseId, String sectionId){
+        ArrayList<Bid> bids = BidDAO.getAllBidBySectionCourseId(courseId, sectionId);
+        return bids;
+
+    }
 }
 
-/* public boolean checkIfCourseIsValid(String courseCode){
-        Course c=cd.getCourseByCourseCode(courseCode);
-        return (c==null);
-    }
-    
-    public boolean checkIfSectionIsValid(String courseCode,String sectionCode){
-        Section s= secd.getSpecificSection(courseCode, sectionCode);
-        return (s==null);
-        
-        
-    }
-    
-    public boolean checkIfUserIsValid(String userId){
-        Student s= sd.getStudentById(userId);
-        return (s==null);
-    }*/

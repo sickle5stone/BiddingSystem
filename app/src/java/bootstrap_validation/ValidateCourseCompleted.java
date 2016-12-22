@@ -26,17 +26,29 @@ public class ValidateCourseCompleted {
      */
     public static ArrayList<String> checkCourseCompleted(String[] row){
         ArrayList<String> errors = new ArrayList<>();
+         if (row.length < 2){
+            return errors;
+        }
         String userId=row[0];
         String courseCode=row[1];
-      
+        
         if (!checkValidStudent(BootstrapController.STUDENTLIST, userId)){
             errors.add("invalid userid");            
         }
         if (!checkValidCourse(BootstrapController.COURSELIST, courseCode)){
-            errors.add("invalid code");            
+            errors.add("invalid course");            
         }
 
+        
+        if (checkDuplicateCourseCode (BootstrapController.COURSECOMPLETE.get(userId), courseCode)){
+            errors.add("duplicate entry");
+        }
+        
+        
         if (errors.isEmpty()) {
+            
+            boolean test1 = checkValidStudent(BootstrapController.STUDENTLIST, userId);
+            boolean test2 = checkValidCourse(BootstrapController.COURSELIST, courseCode);
             
             if (!completedPrereq(userId, courseCode)){
                 // add error message if student did not complete prereq for the course
@@ -104,7 +116,8 @@ public class ValidateCourseCompleted {
        
         ArrayList<String> preReqsByCourse = preReqs.get(courseCode); // get all preReqs for the course
         ArrayList<String> courseCompletedByStudent = coursesCompleted.get(userId);
-        if (courseCompletedByStudent == null){
+        
+        if (courseCompletedByStudent == null  ){
             return false;
         }
         for (String prereqId : preReqsByCourse) {
@@ -120,8 +133,7 @@ public class ValidateCourseCompleted {
                 return false;
             }     // the preReq is not completed 
 
-        }  
-        return true;
+        }          return true;
     }    
     /**
      * Method to add course into course completed list
@@ -133,12 +145,14 @@ public class ValidateCourseCompleted {
         HashMap<String, ArrayList<String>> coursesCompleted = BootstrapController.COURSECOMPLETE; // studentId, list of courseId completed
          ArrayList<String> courses;
         if(coursesCompleted.containsKey(userId)){
-            
             // retrieve existing student record, add course code to existing arraylist of courses completed
            courses= coursesCompleted.get(userId);
+           if (courses.contains(courseCode)){
+               return;
+           }
            courses.add(courseCode);
-           BootstrapController.COURSECOMPLETE.remove(userId);
-           BootstrapController.COURSECOMPLETE.put(userId, courses);
+          // BootstrapController.COURSECOMPLETE.remove(userId);
+           //BootstrapController.COURSECOMPLETE.put(userId, courses);
         } else {
            // adds record of new student and the completed course
            courses = new ArrayList<String>();
@@ -147,4 +161,20 @@ public class ValidateCourseCompleted {
            BootstrapController.COURSECOMPLETE.put(userId, courses);
         }
     }     
+    /**
+     * Takes in list of course student has completed, and compares to the current course to add to coursecomplete
+     * @param courses list of course from COURSECOMPLETE hashmap
+     * @param courseCode course code of course to add
+     * @return true if course has not been added before, false otherwise
+     */
+    public static boolean checkDuplicateCourseCode(ArrayList<String> courses, String courseCode){
+        if(courses!=null){
+            for(String str :  courses){
+                if(courses.equals(courseCode)){
+                     return true;
+                }
+            }
+        }        
+        return false;   
+    } 
 }

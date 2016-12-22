@@ -1,7 +1,6 @@
 <%-- 
     Document   : loginpage
-    Created on : Oct 2, 2016, 8:37:38 PM
-    Author     : Cheryl
+    Author     : Cheryl, Aloysius, Haseena
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -16,10 +15,11 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>Signin Template for Bootstrap</title>
+    <title>BIOS Data</title>
 
     <!-- Bootstrap core CSS -->
     <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/custom.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="./css/signin.css" rel="stylesheet">
@@ -28,55 +28,67 @@
     <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
     <script src="../../assets/js/ie-emulation-modes-warning.js"></script>
 
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
+     
   </head>
-
-  <body>
-
-    <div class="container">
-
-      <form class="form-signin" action="LoginServlet" method="POST">
-        <h2 class="form-signin-heading">Please sign in</h2>
-        <label for="inputEmail" class="sr-only">Email address</label>
-        <input type="username" id="inputEmail" name="userId" class="form-control" placeholder="Username" required autofocus>
-        <label for="inputPassword" class="sr-only">Password</label>
-        <input type="password" id="inputPassword" name="password" class="form-control" placeholder="Password" required>
-
-        <select name="userType"> 
-                    <option value="student">Student</option>
-                    <option value="admin">Staff</option>
-            </select>
+  <body class="container text-center col-sm-3">
+    <div style="width: 700px" class="col-md-offset-12 " role="alert" style="text-align: center;">
+            </div>
+<%
+    String error = (String) request.getAttribute("loginError");
+     if (error != null){
+%>
         
-        <div class="checkbox">
-          <label>
-            <input type="checkbox" value="remember-me"> Remember me
-          </label>
-        </div>
-        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-      
-      </form>
-
-    </div> <!-- /container -->
-
-
-  </body>
-</html>
-    
-    <div class="alert alert-danger col-md-5" role="alert">
+                    <div class="top-content"> 
+    <div style="width: 700px" class="red panel container col-md-offset-12 " role="alert" style="text-align: center;">
         <strong>
       
         <%
-            String error = (String) request.getAttribute("loginError");
-            if (error != null){
-                out.print(error);
-            }
-        %>
+                out.print(error);%>
+         
         </strong> 
-</div>
-        <div class='col-md-5'
-    </body>
+    </div>
+    <%}        %>    
+    <div class="wrapper  col-md-offset-6">
+    <div class="container text-center panel-body">    
+        <div id="loginbox"  class="container-fluid text-center transparent col-md-4 col-md-offset-3 ">                    
+            <div class="transparent container-fluid text-center panel-info" >
+                       
+                    <div class="panel-body " >
+                       <form class="container-fluid form-horizontal form-group-lg" action="LoginServlet" method="POST">
+                                    
+                            <div style="margin-bottom: 15px" class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                                       <input type="username" name="userId" class="form-control" placeholder="Username" required autofocus>
+                                    </div>
+                                
+                            <div style="margin-bottom: 15px" class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                                        <input type="password"  name="password" class="form-control" placeholder="Password" required autofocus>
+                                    </div>
+
+                            <div style="margin-bottom: 15px" class="input-group">    
+                                  <span class="input-group-addon"><i class="glyphicon glyphicon-education"></i></span>
+                           <select class="form-control" name="userType"> 
+                    <option value="student">Student</option>
+                    <option value="admin">Staff</option>
+            </select>       
+                        </div>   
+                                <div style="margin-top:10px" class="form-group">
+                                    <!-- Button -->
+
+                                    <div class="col-sm-12 controls">
+                                    
+                                     <button class="btn btn-lg btn-success btn-block" type="submit"> <span class="form-group-addon"><i class="glyphicon glyphicon-log-in"></i></span> Log in</button>
+
+                                    </div>
+                                </div>
+                            </form>     
+                        </div>                     
+                    </div>  
+                </div>
+            </div>
+        </div>
+                    </div>
+     
+</body>
 </html>

@@ -6,10 +6,10 @@
 package servlet;
 
 import controller.BidController;
+import entity.Bid;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- *
+ * Servlet class to handle all requests pertaining to add bid
  * @author Haseena and Regan
  */
 @WebServlet(name = "addBidServlet", urlPatterns = {"/addBidServlet"})
@@ -62,7 +62,7 @@ public class addBidServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**
@@ -76,57 +76,37 @@ public class addBidServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
-        //HttpSession session = request.getSession();
-        //String userId = (String) session.getAttribute("studentUser");
+
          HttpSession session = request.getSession();
          String userID=(String) session.getAttribute("student");
-       //  String userID="amy.ng.2016";
          
          //Get the inputs from addBid.jsp
          String courseCode=request.getParameter("courseCode");
          String sectionCode=request.getParameter("sectionCode");
          String amt=request.getParameter("amount");
          amt=amt.replaceAll(" ","");
-         double amount=Double.parseDouble(amt); 
-         
-
-         
-      //   ArrayList<String> errorList=bc.addBid(userID, amount, sectionCode, courseCode);
+         double amount=Double.parseDouble(amt);
          
          //test code
         ArrayList<String> errorList = BidController.addBid(userID, amount,sectionCode,courseCode);
         for(String error: errorList){
             System.out.println(error);
-            
         }
-      
-       // errorList.add("error 1");
-     //   errorList.add("error 2");
-        
-        //String [] errorArr = new String[errorList.size()];
-        //errorArr = errorList.toArray(errorArr);
          
          //There is no error, can proceed to bid
          if(errorList.isEmpty()){
               //Returns the success message to the bid page
                 session.setAttribute("bidSuccessMessage","Bid Successful!");
-          /*  RequestDispatcher view = request.getRequestDispatcher("studenthome.jsp");
-              view.forward(request, response);  */
+                Bid b = new Bid(userID, courseCode,sectionCode,amount,"SUCCESS");
+                session.setAttribute("bid", b);
                 response.sendRedirect("studenthome.jsp");
-              
           
          }else{
-                      //Returns the error message to the bid page
+                //Returns the error message to the bid page
                 session.setAttribute("bidFailMessages",errorList);
-                    //request.setAttribute("bidFailMessages",errorList);
-                    //RequestDispatcher view = request.getRequestDispatcher("searchSection.jsp");
-                    //view.forward(request, response);
+                Bid b = new Bid(userID, courseCode,sectionCode,amount,"FAILED");
+                session.setAttribute("bid", b);
                 response.sendRedirect("studenthome.jsp");
-           
-          // RequestDispatcher view = request.getRequestDispatcher("studenthome.jsp");
-           
-          
          }
        processRequest(request, response);   
     }

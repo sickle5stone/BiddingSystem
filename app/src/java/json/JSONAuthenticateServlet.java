@@ -11,11 +11,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import static controller.LoginController.processLogin;
-import dao.AdminDAO;
 import is203.JWTUtility;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -23,12 +21,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- *
- * @author reganseah & cheryl
+ * Servlet to handle JSON authentication request 
+ * @author reganseah and cheryl
  */
 @WebServlet(name = "JSONAuthenticateServlet", urlPatterns = {"/json/authenticate"})
 public class JSONAuthenticateServlet extends HttpServlet {
+
     private static final String SHARED_SECRET = "TwoOStubbornCows";
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -46,7 +46,7 @@ public class JSONAuthenticateServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet JSONAuthenticateServlet</title>");            
+            out.println("<title>Servlet JSONAuthenticateServlet</title>");
             out.println("</head>");
             out.println("<body>");
             out.println("<h1>Servlet JSONAuthenticateServlet at " + request.getContextPath() + "</h1>");
@@ -67,7 +67,7 @@ public class JSONAuthenticateServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**
@@ -85,18 +85,16 @@ public class JSONAuthenticateServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
         String userType = "admin";
-        
+
         JsonObject toReturn = new JsonObject();
         JsonArray errors = new JsonArray();
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        
-
         // username parameter is missing
         if (username == null) {
             errors.add(new JsonPrimitive("missing username"));
-            
+
         } else if (username.trim().isEmpty()) {
             // username parameter is empty
             errors.add(new JsonPrimitive("blank username"));
@@ -109,31 +107,29 @@ public class JSONAuthenticateServlet extends HttpServlet {
             // password parameter is empty
             errors.add(new JsonPrimitive("blank password"));
         }
-        
-        if(errors.size()!=0){
+
+        if (errors.size() != 0) {
             toReturn.addProperty("status", "error");
-            toReturn.add("message",errors);
+            toReturn.add("message", errors);
+            toReturn = JsonCommonValidation.sortJsonArray(toReturn);
             out.print(gson.toJson(toReturn));
             return;
         }
         boolean status = processLogin(username, password, userType);
-        if(!status){
+        if (!status) {
             errors.add(new JsonPrimitive("invalid username/password"));
             toReturn.addProperty("status", "error");
-            toReturn.add("message",errors);
+            toReturn.add("message", errors);
+            toReturn = JsonCommonValidation.sortJsonArray(toReturn);
             out.print(gson.toJson(toReturn));
             return;
         }
 
         toReturn.addProperty("status", "success");
         String token = JWTUtility.sign(SHARED_SECRET, username);
-        toReturn.addProperty("token",token);
-        
+        toReturn.addProperty("token", token);
         out.print(gson.toJson(toReturn));
-        
-        
-        
-        
+
     }
 
     /**

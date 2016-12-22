@@ -5,11 +5,6 @@
  */
 package entity;
 
-/**
- *
- * @author Haseena
- */
-
 /** 
  * A Round with roundNumber and status 
  * @author ChenHuiYan and Haseena

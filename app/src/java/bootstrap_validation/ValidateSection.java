@@ -26,6 +26,10 @@ public class ValidateSection {
      */
     public static ArrayList<String> checkSection(String[] row) {
         ArrayList<String> errors = new ArrayList<>();
+        if (row.length < 8){
+            return errors;
+        }
+        
         ArrayList<Course> courses = BootstrapController.COURSELIST;
         String courseCode = row[0];
         String section = row[1];
@@ -35,6 +39,8 @@ public class ValidateSection {
         String instructorName = row[5];
         String venueName = row[6];
         String sectionSize = row[7];
+        
+        
         Date startTime = null;
         Date endTime = null;
         int dayOfWeek = 0;
@@ -54,24 +60,21 @@ public class ValidateSection {
         }
 
         //Check if startTime follows the correct format
-        try {
-            startTime = isTimeFormatValid("H:mm", examStartTime);
-
-        } catch (ParseException e) {
-            errors.add("invalid start");  // start time doesn't follow the format
-        }
+        startTime = isTimeFormatValid("H:mm", examStartTime);
+        if(startTime == null){
+            errors.add("invalid start");
+        }  // start time doesn't follow the format
+        
 
         //check if the endTime is in the correct format
-        try {
-            endTime = isTimeFormatValid("H:mm", examEndTime);
-            //check if exam end time is later than exam start time
-            if (endTime.before(startTime)) {
-                errors.add("invalid end");
-            }
-        } catch (ParseException e) {
-            // endTime doesn't follow the format
-            errors.add("invalid end");  
+        
+        endTime = isTimeFormatValid("H:mm", examEndTime);
+        if ( endTime==null ){
+            errors.add("invalid end");
+        } else if (startTime != null && endTime.before(startTime)) {//check if exam end time is later than exam start time
+            errors.add("invalid end");
         }
+       
         String instruError = isValidInstructor(instructorName); // returns string error, or null object if no error
         String venueError = isValidVenue(venueName); // returns string error, or null object if no error
         
@@ -83,9 +86,10 @@ public class ValidateSection {
             errors.add(venueError);
         }
         
-        if (!venueIsNotOccupied(venueName, dayOfWeek, startTime, endTime)){
+      /*  if (!venueIsNotOccupied(venueName, dayOfWeek, startTime, endTime)){
             errors.add("venue occupied");
-        }
+        }*/
+      
         String sizeError = isValidSize(sectionSize);
         if (sizeError!= null){
             errors.add(sizeError);
@@ -216,6 +220,9 @@ public class ValidateSection {
             try {
                 //Check if remaining parts are digit, if failed, enter exception block
                 int remainingNumbersInSectionId = Integer.parseInt(digits);
+                if (remainingNumbersInSectionId < 1){
+                    return "invalid section";
+                }
 
             } catch (NumberFormatException e) {
                 return "invalid section";
@@ -231,18 +238,41 @@ public class ValidateSection {
     /**
      * Method to check if time passed in is valid
      * @param format Format to match against
-     * @param TimeToValdate Time field to validate
+     * @param timeToValidate Time field to validate
      * @return date object if time passed in is valid
-     * @throws ParseException Parse exception is thrown when invalid input is passed in
      */
-    public static Date isTimeFormatValid(String format, String TimeToValdate) throws ParseException {
-
+    public static Date isTimeFormatValid(String format, String timeToValidate)  {
+        if (timeToValidate.isEmpty() || timeToValidate.length()> 5){ // h:mm max hh:mm 5 char
+            return null;
+        }
+        int colon = 0;
+        for (int i = 0; i < timeToValidate.length(); i++){
+            if (timeToValidate.charAt(i)==':' ){
+                colon++;
+            }
+        }
+        if (colon == 0 || colon > 1){
+            return null;
+        }
+        String[] strs = timeToValidate.split(":");
+        if (strs.length != 2){
+            return null;
+        }
+        if (strs[0].length() > 2 || strs[0].length() < 1){ // check if first half of the string is valid
+            return null;
+        } 
+        if (strs[1].length() != 2){ // has to be 2 char length
+            return null;
+        }
         SimpleDateFormat formatter = new SimpleDateFormat(format);
         formatter.setLenient(false); // for strict matching 
-        Date returnTime;
-
-        //Format the Time to H:mm
-        returnTime = formatter.parse(TimeToValdate);
+        Date returnTime = null; //Format the Time to H:mm
+        try {
+            returnTime = formatter.parse(timeToValidate);
+            
+        }catch (ParseException e){
+            
+        }
         return returnTime;
     }
 
@@ -309,9 +339,9 @@ public class ValidateSection {
      * @return empty string if section size is valid else return error message, "invalid size"
      */    
     public static String isValidSize(String size) {
-        if (size.length() > 2){
+       /* if (size.length() > 2){
             return "invalid size";
-        }
+        }  */
         boolean isValid = true;
         for (int i = 0; i < size.length(); i++) {
             char ch = size.charAt(i);
@@ -320,6 +350,12 @@ public class ValidateSection {
                 isValid = false;
             }
         }
+        
+        // check if first number is zero it is invalid
+        if(size.charAt(0) == '0'){  
+            isValid = false;
+        } 
+   
         if (!isValid) {
             return "invalid size";
         }

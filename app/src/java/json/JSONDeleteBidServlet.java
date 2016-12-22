@@ -15,12 +15,9 @@ import controller.BidController;
 import controller.CourseSectionController;
 import controller.RoundController;
 import controller.StudentController;
-import entity.Bid;
 import entity.Course;
 import entity.Section;
 import entity.Student;
-import is203.JWTException;
-import is203.JWTUtility;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -29,12 +26,11 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.minidev.json.JSONObject;
 
 
 /**
- *
- * @author Haseena
+ * Method to handle JSON requests for delete bid
+ * @author Haseena and Regan
  */
 @WebServlet(name = "JSONDeleteBid", urlPatterns = {"/json/delete-bid"})
 public class JSONDeleteBidServlet extends HttpServlet {
@@ -80,18 +76,11 @@ public class JSONDeleteBidServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String urlObject=request.getParameter("r");
-        
-        JsonParser jsonParser = new JsonParser();
-        JsonObject jsonObject = (JsonObject) jsonParser.parse(urlObject);
-        
-        String userId = jsonObject.get("userid").getAsString();
-        String course = jsonObject.get("course").getAsString();
-        String section = jsonObject.get("section").getAsString();
-        String token=request.getParameter("token");
-        
         PrintWriter out = response.getWriter();
         Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+        
+        String urlObject=request.getParameter("r");
+        String token=request.getParameter("token");
         
         ArrayList<String> fields = new ArrayList<>();
         fields.add("userid");
@@ -104,23 +93,32 @@ public class JSONDeleteBidServlet extends HttpServlet {
         JsonArray errors = new JsonArray();
         JsonObject error = JsonCommonValidation.validate(token, fields, urlObject);
         if (error != null){            
-            toReturn.add("message", errors);
-            out.print(gson.toJson(toReturn));
+            //toReturn.add("message", errors);
+            error = JsonCommonValidation.sortJsonArray(error);
+            out.print(gson.toJson(error));
             return;
         }
+        
+        
+        JsonParser jsonParser = new JsonParser();
+        JsonObject jsonObject = (JsonObject) jsonParser.parse(urlObject);
+        
+        String userId = jsonObject.get("userid").getAsString();
+        String course = jsonObject.get("course").getAsString();
+        String section = jsonObject.get("section").getAsString();
+        
 
 
 
         // verify that user is valid (throws exception if user is not valid)
         // String username = JWTUtility.verify(tok, "TwoOStubbornCows");
-        boolean roundActive;
+        boolean roundActive=false;
         String status = RoundController.getStatus();
         int roundNum = RoundController.getRound();
 
         //Checks if the current round has ended
         if (status.equals("inactive") || (roundNum < 0 || roundNum > 3)) {
             errors.add(new JsonPrimitive("round ended"));
-            return;
         } else {
             roundActive = true;
         }
@@ -130,23 +128,24 @@ public class JSONDeleteBidServlet extends HttpServlet {
         boolean courseValid = false;
         boolean useridValid = false;
         boolean sectionValid = false;
+        Student s = StudentController.retrieveStudent(userId);
+        if (s != null) {
+            useridValid = true;
+            //if student exist, check for section
+        } else {
+            errors.add(new JsonPrimitive("invalid userid"));
+
+        }
         if (c != null) {
             //if course exist, check for userId
             courseValid = true;
-            Student s = StudentController.retrieveStudent(userId);
-            if (s != null) {
-                useridValid = true;
-                //if student exist, check for section
-                Section sect = CourseSectionController.getSection(course, section);
-                if (sect != null) {
-                    sectionValid = true;
-                } else {
-                    errors.add(new JsonPrimitive("invalid section"));
-                }
+            Section sect = CourseSectionController.getSection(course, section);
+            if (sect != null) {
+                sectionValid = true;
             } else {
-                errors.add(new JsonPrimitive("invalid userid"));
-
+                errors.add(new JsonPrimitive("invalid section"));
             }
+           
         } else {
             errors.add(new JsonPrimitive("invalid course"));
         }
@@ -161,15 +160,20 @@ public class JSONDeleteBidServlet extends HttpServlet {
                 BidController.deleteBidFromStudent(userId, course, section);
             }
 
-            if (errors.size() > 0) {
-                toReturn.addProperty("status", "error");
-                toReturn.add("message", errors);
-            } else {
-                toReturn.addProperty("status", "success");
-            }
-            out.print(gson.toJson(toReturn));
+          
 
         }
+        
+        if (errors.size() > 0) {
+                toReturn.addProperty("status", "error");
+                toReturn.add("message", errors);
+                toReturn = JsonCommonValidation.sortJsonArray(toReturn);
+        }else {
+                toReturn.addProperty("status", "success");
+        }
+        
+        out.print(gson.toJson(toReturn));
+           
         
     }
 
@@ -184,7 +188,7 @@ public class JSONDeleteBidServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect("/app/wrongmethod.jsp");
 
        
     }

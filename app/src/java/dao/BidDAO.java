@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import utility.ConnectionManager;
 
 /**
@@ -25,6 +24,51 @@ import utility.ConnectionManager;
  * @author Aloysius, Cheryl
  */
 public class BidDAO {
+    /**
+     * Method retrieve all bids in a section of a particular course
+     * @param courseId courseCode of section
+     * @param sectionId section Id
+     * @return ArrayList of bids for the particular section of a course
+     */
+    public static ArrayList<Bid> getAllBidBySectionCourseId(String courseId, String sectionId){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+
+        ArrayList<Bid> bidList = new ArrayList();
+
+        Bid bid = null;
+        
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "select * from bid WHERE course_id = ? AND section_id = ? order by amount desc, user_id asc";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, courseId);
+            stmt.setString(2, sectionId);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                String sectionCode = rs.getString("section_id");
+                String courseCode = rs.getString("course_id");
+                Double amount = rs.getDouble("amount");
+                String status = rs.getString("status");
+                String userId = rs.getString("user_id");
+                bid = new Bid(userId, courseCode, sectionCode, amount, status);
+
+                bidList.add(bid);
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+        return bidList;
+
+    }
+    /**
+     * Method to retrieve all bids
+     * @return Arraylist of bids 
+     */
     public static ArrayList<Bid> getAllBids() {
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -37,7 +81,7 @@ public class BidDAO {
 
         try {
             conn = ConnectionManager.getConnection();
-            sql = "select * from bid order by course_id, section_id, amount, user_id";
+            sql = "select * from bid order by course_id, section_id, amount desc, user_id";
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -119,13 +163,13 @@ public class BidDAO {
             sql = "select * from bid where user_id = ? and status =? ";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, userId);
-            stmt.setString(2, "Fail"); // get unsuccessfulBid by checking the status
+            stmt.setString(2, "fail"); // get unsuccessfulBid by checking the status
             rs = stmt.executeQuery();
             while (rs.next()) {
                 String sectionCode = rs.getString("section_id");
                 String courseId = rs.getString("course_id");
                 Double amount = rs.getDouble("amount");
-                String status = "Fail";
+                String status = "fail";
                 bid = new Bid(userId, courseId, sectionCode, amount, status);
 
                 unsuccessfulBidListByUserId.add(bid);
@@ -162,7 +206,7 @@ public class BidDAO {
             stmt.setDouble(2, bidAmount);
             stmt.setString(3, courseCode);
             stmt.setString(4, sectionId);
-            stmt.setString(5, "PENDING");
+            stmt.setString(5, "pending");
 
             stmt.executeUpdate();
 
@@ -372,13 +416,13 @@ public class BidDAO {
             sql = "select * from bid where user_id = ? and status =? ";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, userId);
-            stmt.setString(2, "Success");
+            stmt.setString(2, "success");
             rs = stmt.executeQuery();
             while (rs.next()) {
                 String sectionCode = rs.getString("section_id");
                 String courseId = rs.getString("course_id");
                 Double amount = rs.getDouble("amount");
-                String status = "Success";
+                String status = "success";
                 bid = new Bid(userId, courseId, sectionCode, amount, status);
 
                 enrolledBids.add(bid);
@@ -532,14 +576,14 @@ public class BidDAO {
 
         try {
             conn = ConnectionManager.getConnection();
-            sql = "UPDATE bios_database.bid SET status = 'SUCCESS' WHERE course_id = ? AND section_id = ? AND amount >= ?";
+            sql = "UPDATE bios_database.bid SET status = 'success' WHERE course_id = ? AND section_id = ? AND amount >= ?";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, courseCode);
             stmt.setString(2, sectionCode);
             stmt.setDouble(3, minBid);
             stmt.executeUpdate();
 
-            sql = "UPDATE bios_database.bid SET status = 'FAILED' WHERE course_id = ? AND section_id = ? AND amount < ?";
+            sql = "UPDATE bios_database.bid SET status = 'fail' WHERE course_id = ? AND section_id = ? AND amount < ?";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, courseCode);
             stmt.setString(2, sectionCode);
@@ -638,7 +682,7 @@ public class BidDAO {
 
         try {
             conn = ConnectionManager.getConnection();
-            sql = "select * from bid where user_id = 'Failed'";
+            sql = "select * from bid where status = 'fail'";
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -673,7 +717,7 @@ public class BidDAO {
 
         try {
             conn = ConnectionManager.getConnection();
-            sql = "select * from bid where status = 'SUCCESS' ";
+            sql = "select * from bid where status = 'success' ";
             stmt = conn.prepareStatement(sql);
 
             rs = stmt.executeQuery();
@@ -682,7 +726,7 @@ public class BidDAO {
                 String sectionCode = rs.getString("section_id");
                 String courseId = rs.getString("course_id");
                 Double amount = rs.getDouble("amount");
-                String status = "SUCCESS";
+                String status = "success";
                 bid = new Bid(userId, courseId, sectionCode, amount, status);
 
                 successfulBids.add(bid);
@@ -694,6 +738,99 @@ public class BidDAO {
         }
         return successfulBids;
     }
-    // public static double getRoundTwoLowestSuccessfulBidPrice(String courseCode, String sectionCode, int vacancy){
-    // }
+
+    /**
+     * Retrieve lowest bid amount with the specified course and section
+     * @param courseCode Course code
+     * @param sectionCode Section code of the specified course
+     * @return lowest bid amount
+     */
+    public static double getLowestBidAmount(String courseCode, String sectionCode) {
+        double lowestBidAmount=10;
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "SELECT amount FROM bios_database.bid WHERE course_id = ? AND section_id = ? ORDER BY amount ASC LIMIT 1";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, courseCode);
+            stmt.setString(2, sectionCode);
+            rs = stmt.executeQuery();
+            rs.next();
+            lowestBidAmount = rs.getDouble(1);
+
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+
+        return lowestBidAmount;
+    }
+    
+    /**
+     * Set the bid status of the specified course and section to the inputted status string
+     * @param courseCode Course code
+     * @param sectionCode Section of the specified course
+     * @param userId the user that the bid belongs to
+     * @param status the specified status to change to 
+     */
+    public static void setBidStatus(String courseCode,String sectionCode,String userId, String status) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "UPDATE bios_database.bid SET status = ? WHERE course_id = ? AND section_id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, status);
+            stmt.setString(2, courseCode);
+            stmt.setString(3, sectionCode);
+            stmt.setString(4, userId);
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+    }
+    
+    /**
+     * Retrieve the lowest successful bid in the bid table , used in JSON related functions
+     * @param courseCode course code
+     * @param sectionCode section of the specified course
+     * @return the bid lowest successful bid amount 
+     */
+    public static double getLowestSuccessfulBid(String courseCode, String sectionCode) {
+        double lowestBidAmount=10;
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        String sql = "";
+        ResultSet rs = null;
+
+        try {
+            conn = ConnectionManager.getConnection();
+            sql = "SELECT amount FROM bios_database.bid WHERE course_id = ? AND section_id = ? AND STATUS = 'success' ORDER BY amount ASC LIMIT 1";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, courseCode);
+            stmt.setString(2, sectionCode);
+            rs = stmt.executeQuery();
+            rs.next();
+            lowestBidAmount = rs.getDouble(1);
+
+        } catch (SQLException e) {
+            System.out.println(e);
+        } finally {
+            ConnectionManager.close(conn, stmt, rs);
+        }
+
+        return lowestBidAmount;
+    }
+    
 }

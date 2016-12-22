@@ -11,8 +11,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import controller.RoundController;
-import is203.JWTException;
-import is203.JWTUtility;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -20,9 +18,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import static json.JsonCommonValidation.checkToken;
 
 /**
- *
+ * Method to handle JSON requests for start round
  * @author ChenHuiYan and Regan 
  */
 @WebServlet(name = "JSONStartRoundServlet", urlPatterns = {"/json/start"})
@@ -66,58 +65,63 @@ public class JSONStartRoundServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
         PrintWriter out = response.getWriter();
         Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-
-        JsonObject error = new JsonObject();
-        error.addProperty("status", "error");
-        String tok = request.getParameter("token");
-
+         JsonArray errors = new JsonArray();
         JsonObject toReturn = new JsonObject();
+        String token = request.getParameter("token");
+        if(token==null){
+            toReturn.addProperty("status", "error");
+            errors.add(new JsonPrimitive("invalid request object"));
+            toReturn.add("message", errors);
+            out.print(gson.toJson(toReturn)); 
+            return;
+            
+        }
+        
+      
+           
+        if (!checkToken(token).isEmpty()) {
+                errors.add(new JsonPrimitive((checkToken(token))));
+        }
+        
+        if (errors.size()>0){  
+            toReturn.addProperty("status", "error");
+            toReturn.add("message", errors);
+            toReturn = JsonCommonValidation.sortJsonArray(toReturn);
+            out.print(gson.toJson(toReturn));
+            return;
+        }
+        
         toReturn.addProperty("status", "success");
+        String status = RoundController.getStatus();
+        int  roundNum= RoundController.getRound(); 
 
-        if (tok == null) {
-            out.print(gson.toJson(error));
+        if (roundNum==2 && status.equals("inactive")) {
+            errors.add(new JsonPrimitive("round 2 ended"));
+
+        }else if (status.equals("inactive")){
+            RoundController.startRound();
+
         }
 
-        try {
-            // verify that user is valid (throws exception if user is not valid)
-            String username = JWTUtility.verify(tok, "TwoOStubbornCows");
-            JsonArray errors = new JsonArray();
-            
-            String status = RoundController.getStatus();
-            int  roundNum= RoundController.getRound(); 
-
-            if (roundNum==2 && status.equals("inactive")) {
-                errors.add(new JsonPrimitive("round 2 ended"));
-
-            }else if (status.equals("inactive")){
-                RoundController.startRound();
-                
-            }
-            
-            if (errors.size() > 0) {
+        if (errors.size() > 0) {
+            toReturn.addProperty("status", "error");
+            toReturn.add("message", errors);
+        } else {
+            if(RoundController.getStatus().equals("inactive")){ 
+                errors.add(new JsonPrimitive("Failed to start round"));
                 toReturn.addProperty("status", "error");
                 toReturn.add("message", errors);
-            } else {
-                if(RoundController.getStatus().equals("inactive")){ 
-                    errors.add(new JsonPrimitive("Failed to start round"));
+            }else{
+                toReturn.addProperty("status", "success");
+                roundNum= RoundController.getRound(); 
+                toReturn.addProperty("round", roundNum);
 
-                    
-                }else{
-                    toReturn.addProperty("status", "success");
-                    
-                    toReturn.addProperty("round", roundNum);
-                    
-                }
             }
-            out.print(gson.toJson(toReturn));
-
-        } catch (JWTException e) {
-            out.print(gson.toJson(error));
         }
-
-        
+        out.print(gson.toJson(toReturn));        
     }
 
     /**
@@ -131,7 +135,7 @@ public class JSONStartRoundServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**

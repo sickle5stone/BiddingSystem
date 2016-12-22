@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- *
+ * Servlet class to handle all requests pertaining to drop section
  * @author Aloysius, Cheryl
  */
 @WebServlet(name = "dropSectionServlet", urlPatterns = {"/dropSectionServlet"})
@@ -61,7 +61,7 @@ public class dropSectionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //doPost(request,response);
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**

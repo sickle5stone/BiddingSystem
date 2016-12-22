@@ -9,7 +9,7 @@ import java.util.Date;
 
 /**
  *
- * @author Cheryl & Haseena
+ * @author Cheryl and Haseena
  */
 
 /** 

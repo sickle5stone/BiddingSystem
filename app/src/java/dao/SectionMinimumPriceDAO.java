@@ -44,7 +44,12 @@ public class SectionMinimumPriceDAO {
              ConnectionManager.close(conn, stmt, rs);
         }
     }
-    
+    /**
+     * Method to set minimum bid 
+     * @param courseCode course Code
+     * @param sectionCode Section belonging to above course code
+     * @param minBid minimum bid amount to be set
+     */
     public static void setMinBid(String courseCode,String sectionCode,double minBid){
         Connection conn = null;
         PreparedStatement stmt = null;

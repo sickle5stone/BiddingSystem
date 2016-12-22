@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import utility.ConnectionManager;
 import java.sql.Time;
-import java.sql.Timestamp;
 
 /**
  * Class that handles all database operations pertaining to the Section Table
@@ -24,7 +23,6 @@ import java.sql.Timestamp;
 public class SectionDAO {
     /**
      * Retrieves all sections in the database
-     * @param courseCode
      * @return ArrayList of Section objects
      */
      public static ArrayList<Section> getAllSections() {

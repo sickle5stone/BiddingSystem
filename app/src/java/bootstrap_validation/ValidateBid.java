@@ -24,6 +24,11 @@ public class ValidateBid {
      */
     public static ArrayList<String> validateBid(String[] oneBid) {
         ArrayList<String> errors = new ArrayList<>();
+        
+         if (oneBid.length < 4){
+            return errors;
+        }
+        
         String selectedUserId = oneBid[0];
         String selectedAmount = oneBid[1];
         String selectedCourseId = oneBid[2];
@@ -44,40 +49,67 @@ public class ValidateBid {
         }
         //The course code must be found in the course list, else return errorMsg
         if (!checkIfCourseIsValid(selectedCourseId)) {
-            errors.add("invalid code");            
+            errors.add("invalid course");            
             //checks sectionIsValid only if valid courseCode
         }else if(!checkIfSectionIsValid(selectedSectionId, selectedCourseId)){
             errors.add("invalid section");
         }
         
-       
+        // return error for first half of validation
+        if (!errors.isEmpty()){
+            return errors;
+        }
         // bootstrap always happens during round 1. Get student and check if it is round 1 always 
-       if (!checkIfRoundBidIsOwnSchool(selectedUserId, selectedCourseId)){
+        if (!checkIfRoundBidIsOwnSchool(selectedUserId, selectedCourseId)){
             errors.add("not own school course");
-       }
-        
-        if (!checkIfClassTimeTableClash(selectedUserId,selectedCourseId,selectedSectionId)){
-           errors.add("class timetable clash");
         }
-        
-        // if student hasnt bidded for the course before, check for exam time table
-        if (existingBid == null){
-            if (!checkIfExamTimeTableClash(selectedUserId, selectedCourseId)){
-                errors.add("exam timetable clash");            
+
+           // check only if it is a new bid, not an update of bid
+            if (existingBid == null){
+                if (!checkIfClassTimeTableClash(selectedUserId,selectedCourseId,selectedSectionId)){
+                   errors.add("class timetable clash");
+                }
+
             }
-        }
-        
-        if (!checkPrereq(selectedUserId, selectedCourseId)){
-            errors.add("incomplete prerequisites");            
-        }
-               
-        if (checkCourseAlreadyCompleted(selectedUserId, selectedCourseId)){
-            errors.add("already completed");
-        }
-        
-        if (checkSectionLimitReached(selectedUserId, selectedSectionId)){
-            errors.add("section limit reached");
-        }        
+
+            if (existingBid != null){       
+                ArrayList<Section> sList = BootstrapController.COURSESECTION.get(selectedCourseId);
+                String code = existingBid.getSectionCode();
+                Section temp = null;
+                for (int i = 0; i < sList.size(); i ++){
+                    Section s = sList.get(i);
+                    if (s.getSection().equals(code)){
+                        temp = s;
+                        sList.remove(i);
+                        break;
+                    }
+                }
+                if (!checkIfClassTimeTableClash(selectedUserId,selectedCourseId,selectedSectionId)){
+                   errors.add("class timetable clash");
+                }
+                sList.add(temp);
+            }            
+            
+            
+            // if student hasnt bidded for the course before, check for exam time table
+            if (existingBid == null){
+                if (!checkIfExamTimeTableClash(selectedUserId, selectedCourseId)){
+                    errors.add("exam timetable clash");            
+                }
+            }
+
+            if (!checkPrereq(selectedUserId, selectedCourseId)){
+                errors.add("incomplete prerequisites");            
+            }
+            
+            if (checkCourseAlreadyCompleted(selectedUserId, selectedCourseId)){
+                errors.add("course completed");
+            }
+            
+            if (checkSectionLimitReached(selectedUserId, selectedSectionId)){
+                errors.add("section limit reached");
+            }        
+       
         // check and deduct only if passes all validation
         if (errors.isEmpty()){
             double amount=Double.parseDouble(selectedAmount);
@@ -88,7 +120,8 @@ public class ValidateBid {
                     errors.add("not enough e-dollar");
                 }else{
                     // sufficient edoller remove old bid, add new bid, update edollar
-                    deleteBid(selectedUserId, selectedCourseId);  
+                    deleteBid(selectedUserId, selectedCourseId); 
+                    BootstrapController.COUNTBIDSPROCESSED++;
                     BootstrapController.BIDLIST.add(new Bid(selectedUserId, selectedCourseId, selectedSectionId, amount, "PENDING"));
                     minusEDollar( selectedUserId, amount);
                 } 
@@ -98,6 +131,7 @@ public class ValidateBid {
                 errors.add("not enough e-dollar");
             } else{
                 // not new bid & have sufficient edollar & update edollar
+                BootstrapController.COUNTBIDSPROCESSED++;
                 BootstrapController.BIDLIST.add(new Bid(selectedUserId, selectedCourseId, selectedSectionId, amount, "PENDING"));
                 minusEDollar( selectedUserId, amount);
             }           
@@ -199,7 +233,7 @@ public class ValidateBid {
             // reject if amount is less than min. bid of $10
             
              // check if number is more than what the database accepts
-            if (amount > 9999.99){
+            if (amount > 999999.99){
                 return false;
             }
             if (amount < 10.0 ) {
@@ -424,19 +458,7 @@ public class ValidateBid {
         }
         return true;                
     }
-     
-   /*  public static boolean checkBiddedForCourse(String studentId, String courseId){
-        for (Bid bid : BootstrapController.BIDLIST){
-            // loop thu bidlist grab bids under student
-            if (bid.getUserId().equals(studentId)){
-               if (bid.getCourseCode().equals(courseId)){
-                   return false;
-               }    
-            }
-        }
-        return true;
-     }*/
-        
+    
     /**
      * checkSectionLimit method to check if section limit has been reached
      * @param studentId Student ID
@@ -481,10 +503,6 @@ public class ValidateBid {
      * @return true if prereq has not been completed else return false
      */     
     public static boolean checkPrereq(String studentId, String courseCode){
-        if (studentId.equals("amy.ng.2009")){
-            ArrayList<String> prereqs = BootstrapController.PREREQLIST.get(courseCode);
-            ArrayList<String> coursesCompleted = BootstrapController.COURSECOMPLETE.get(studentId) ;
-        }
         
         ArrayList<String> prereqs = BootstrapController.PREREQLIST.get(courseCode);
         ArrayList<String> coursesCompleted = BootstrapController.COURSECOMPLETE.get(studentId) ;

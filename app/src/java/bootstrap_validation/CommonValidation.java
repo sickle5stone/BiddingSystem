@@ -26,19 +26,11 @@ public class CommonValidation {
             String field=row[i];
             row[i] = row[i].trim();
             if(field.isEmpty()){
-                errors.add("blank ["+header[i]+"]") ;                
+                errors.add("blank "+header[i]);                
             }           
         }
-        
-        /*if (allIsEmpty){
-            return "skip";
-        } */
-        
         
         return errors;
         
     }
-    
-    
-    
 }

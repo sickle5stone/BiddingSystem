@@ -5,9 +5,7 @@
  */
 package servlet;
 
-import com.opencsv.CSVReader;
 import controller.BootstrapController;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.RequestDispatcher;
@@ -20,8 +18,8 @@ import javax.servlet.http.HttpSession;
 import utility.UploadUtility;
 
 /**
- *
- * @author Cheryl
+ * Servlet class to handle all requests pertaining to bootstrap
+ * @author Cheryl and Huiyan
  */
 @WebServlet(name = "BootstrapServlet", urlPatterns = {"/BootstrapServlet"})
 public class BootstrapServlet extends HttpServlet {
@@ -52,7 +50,7 @@ public class BootstrapServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**
@@ -71,12 +69,10 @@ public class BootstrapServlet extends HttpServlet {
        HttpSession session = request.getSession();
        
        // check if admin is login in else redirect to login page
-        /*if (session.getAttribute("adminUser")== null){
-           response.sendRedirect("adminHome.jsp");
-       }  */
         boolean csvFilesExists = UploadUtility.readZipFile(request);
         if (csvFilesExists){
             BootstrapController.readAllCsvFiles();
+            request.setAttribute("successList", BootstrapController.SUCCESSFULRECORDS );
             request.setAttribute("errorList", BootstrapController.ERRORLIST);
           //  forward request object containing error arrayList to adminHome page 
             RequestDispatcher view = request.getRequestDispatcher("adminhome.jsp");

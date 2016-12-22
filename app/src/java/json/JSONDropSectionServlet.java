@@ -8,15 +8,14 @@ package json;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import controller.BidController;
 import controller.CourseSectionController;
 import controller.RoundController;
 import controller.SectionStudentController;
 import controller.StudentController;
+import dao.SectionDAO;
 import entity.Bid;
 import entity.Course;
 import entity.Section;
@@ -29,11 +28,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-//import net.minidev.json.JSONValue;
 
 /**
- *
- * @author Haseena
+ * Method to handle JSON requests for drop section
+ * @author Haseena and Regan
  */
 @WebServlet(name = "JSONDropSectionServlet", urlPatterns = {"/json/drop-section"})
 public class JSONDropSectionServlet extends HttpServlet {
@@ -94,6 +92,7 @@ public class JSONDropSectionServlet extends HttpServlet {
         
         JsonObject error = JsonCommonValidation.validate(token, fields, urlObject);
         if (error != null){
+            error = JsonCommonValidation.sortJsonArray(error);
             out.print(gson.toJson(error));
             return;
         }
@@ -105,26 +104,13 @@ public class JSONDropSectionServlet extends HttpServlet {
         String section = jsonObject.get("section").getAsString();
         
         gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
-        
-         
-         //Calls the common validation & token validation, 
-         //if the method returns an object with errors, do not proceed
-         /*
-        if(token==null){
-            errors.add(new JsonPrimitive("Invalid Token"));
-            toReturn.addProperty("status", "error");
-            toReturn.add("message",errors);
-            out.print(gson.toJson(toReturn));
-            return;
-        }*/
        
-        
         boolean roundActive;
         String status = RoundController.getStatus();
         int roundNum = RoundController.getRound();
 
         //Checks if the round is active and is in round 2
-        if (status.equals("inactive") && (roundNum == 2)) {
+        if (status.equals("inactive")) {
             errors.add(new JsonPrimitive("round not active"));
             toReturn.addProperty("status", "error");
             toReturn.add("message", errors);
@@ -135,53 +121,46 @@ public class JSONDropSectionServlet extends HttpServlet {
         }
         //Check if the course does not exist in the system's record
         Course c = CourseSectionController.getCourseByCourseCode(course);
-        boolean courseValid = false;
-        boolean useridValid = false;
-        boolean sectionValid = false;
-        if (c != null) {
-            //if course exist, check for userId
-            courseValid = true;
-            Student s = StudentController.retrieveStudent(userid);
-            if (s != null) {
-                useridValid = true;
-                //if student exist, check for section
-                ArrayList<Bid> bidList = SectionStudentController.getSectionsByStudentId(userid);
+        Student s = StudentController.retrieveStudent(userid);
+        
+        if(c==null){
+             errors.add(new JsonPrimitive("invalid course"));
+            
+        }else{
+             Section sec=  SectionDAO.getSpecificSection(course,section);
+             if(sec==null){
+                    errors.add(new JsonPrimitive("invalid section"));
+                 
+             }
+            
+        }
+        
+        if(s==null){
+            errors.add(new JsonPrimitive("invalid userid"));
+            
+        }
+        
+        if(errors.size()==0){
+              ArrayList<Bid> bidList = SectionStudentController.getSectionsByStudentId(userid);
                 boolean sectionFound = false;
                 for (Bid bid : bidList) {
                     if (bid.getCourseCode().equals(course)) {
                         if (bid.getSectionCode().equals(section)) {
                             sectionFound = true;
+                            SectionStudentController.deleteSectionFromStudent(userid, course, section);
                             break;
                         }
                     }
                 }
                 if (!sectionFound) {
-                    errors.add(new JsonPrimitive("invalid section"));
-                } else {
-                    sectionValid = true;
+                    errors.add(new JsonPrimitive("no such enrollment record"));
                 }
-            } else {
-                errors.add(new JsonPrimitive("invalid userid"));
-
-            }
-        } else {
-            errors.add(new JsonPrimitive("invalid course"));
-
-        }
-
-        if (roundActive && courseValid && useridValid && sectionValid) {
-            if (!SectionStudentController.deleteSectionFromStudent(userid, course, section)) {
-                errors.add(new JsonPrimitive("no such enrolment record"));
-            } else {
-                //refund edollars & delete bid
-                //SectionStudentController.deleteSectionFromStudent(userId, course, section);
-            }
-
         }
 
         if (errors.size() > 0) {
             toReturn.addProperty("status", "error");
             toReturn.add("message", errors);
+            toReturn = JsonCommonValidation.sortJsonArray(toReturn);
         } else {
             toReturn.addProperty("status", "success");
         }
@@ -200,20 +179,7 @@ public class JSONDropSectionServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        /*  String r=request.getParameter("r");
-        JsonObject rObject=(JsonObject)JSONValue.parse(r);
-        JsonElement userIdJsonElement=rObject.get("userid");
-        String userId=userIdJsonElement.getAsString();
-        
-       JsonElement courseJsonElement=rObject.get("course");
-        String course=courseJsonElement.getAsString();
-        
-        JsonElement sectionJsonElement=rObject.get("section");
-        String section=sectionJsonElement.getAsString();
-        
-        JsonElement tokJsonElement=rObject.get("token");
-        String tok=tokJsonElement.getAsString();*/
-
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**
@@ -225,5 +191,4 @@ public class JSONDropSectionServlet extends HttpServlet {
     public String getServletInfo() {
         return "Short description";
     }// </editor-fold>
-
 }

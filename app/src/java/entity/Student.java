@@ -6,13 +6,8 @@ package entity;
  * and open the template in the editor.
  */
 
-/**
- *
- * @author ChenHuiYan and Haseena
- */
-
 /** 
- * A Student with serId,password,name,school,eDollar.
+ * A Student with userId,password,name,school,eDollar.
  * @author ChenHuiYan and Haseena
  */
 

@@ -20,10 +20,16 @@ public class ValidatePrereq {
      * @return String of error messages
      */
       public static ArrayList<String> checkPrereq (String [] row){
+        ArrayList<String> errors = new ArrayList<>(); // to take in error msg
+        // for blank row at the end
+        if (row.length < 2){
+            return errors;
+        }
+        
+        
         String courseId = row[0];
         String prereqId = row[1];
          
-        ArrayList<String> errors = new ArrayList<>(); // to take in error msg
         
         if (!checkValidCourseId(courseId)){
             errors.add("invalid course");

@@ -7,7 +7,6 @@ package controller;
 
 import static controller.RoundController.getRound;
 import static controller.RoundController.getStatus;
-import dao.BidDAO;
 import dao.RoundDAO;
 import dao.StudentDAO;
 import entity.Bid;
@@ -155,8 +154,16 @@ public class RoundController {
                 if (numBid > 1){
                     // find next higher bid amount
                     double nextBidAmount = BidController.getNextHigherBidAmount(courseCode, sectionCode, clearingPrice);
-                    // clear 
-                    BidController.roundBidStatusUpdate(courseCode, sectionCode, nextBidAmount);
+                    if (nextBidAmount == 0){
+                        // handle corner case when there is not next higher bid above clearing price
+                        // set the success criteria to 1 dollar above the price entered
+                        BidController.roundBidStatusUpdate(courseCode, sectionCode, clearingPrice + 1);
+                    }else{
+                        BidController.roundBidStatusUpdate(courseCode, sectionCode, nextBidAmount);                        
+                    }
+
+
+// clear 
                 } else{
                     BidController.roundBidStatusUpdate(courseCode, sectionCode, clearingPrice);
                 }        
@@ -167,8 +174,10 @@ public class RoundController {
         
         for (Bid bid : failedBids){
             String user = bid.getUserId();
+            double originalAmt = StudentController.getEdollarBalance(user);
             double amount = bid.getBidAmount();
-            StudentDAO.updateEdollar(user, amount);
+            double refundedAmt = originalAmt + amount;
+            StudentDAO.updateEdollar(user, refundedAmt);
         }
         
        
@@ -182,7 +191,7 @@ public class RoundController {
         for (Bid bid : failedBids){
             String user = bid.getUserId();
             double amount = bid.getBidAmount();
-            StudentDAO.updateEdollar(user, amount);
+            StudentController.updateEdollar(user, amount);
         }
     }
     

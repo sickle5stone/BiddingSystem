@@ -30,6 +30,9 @@ public class ValidateCourse {
      */
     public static ArrayList<String> checkCourse(String[] row){
         ArrayList<String> errors = new ArrayList<>();
+         if (row.length < 7){
+            return errors;
+        }
         
         String courseCode = row[0];
         String school = row[1];
@@ -44,37 +47,37 @@ public class ValidateCourse {
         }
         
         if (checkDuplicateCourseCode (BootstrapController.COURSELIST, courseCode)){
-            errors.add("duplicate coursecode");
+            errors.add("duplicate course code");
         } 
 
         if (!checkTitleIsValid(title)){
-             errors.add("invalid course title");
+             errors.add("invalid title");
         }
         boolean temp = checkDescriptionIsValid(desc);
         if (!checkDescriptionIsValid(desc)){
-            errors.add("invalid course description");
+            errors.add("invalid description");
         }
         
        
         Date examDateFormat=validDateFormat("yyyyMMdd", examDate);
         if (examDateFormat==null) {
-            errors.add("invalid format of exam date");
+            errors.add("invalid exam date");
         }
         
         Date examStartFormat=validDateFormat("H:mm", examStart);
         if (examStartFormat==null) {
-            errors.add("invalid format of exam start time");
+            errors.add("invalid exam start");
         }
        
         Date examEndFormat=validDateFormat("H:mm", examEnd);
         if (examEndFormat==null) {
-            errors.add("invalid format of exam end time");
+            errors.add("invalid exam end");
         }
         
         // to check if end time before start time
         if ((examEndFormat != null) && (examStartFormat != null) ){
             if ( examEndFormat.before(examStartFormat)){
-                errors.add("invalid exam start and end time");
+                errors.add("invalid exam end");
             }            
         }
         

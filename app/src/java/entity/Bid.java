@@ -5,11 +5,6 @@
  */
 package entity;
 
-/**
- *
- * @author ChenHuiYan and Regan 
- */
-
 /** 
  * A Bid with userId, courseCode, sectionCode, bidAmount and bidStatus
  * @author ChenHuiYan and Haseena

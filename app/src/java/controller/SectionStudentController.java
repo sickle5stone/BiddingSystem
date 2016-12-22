@@ -9,7 +9,6 @@ import static controller.BidController.getClearingPriceForRoundTwo;
 import dao.BidDAO;
 import dao.SectionStudentDAO;
 import entity.Bid;
-import entity.Section;
 import java.util.ArrayList;
 
 /**
@@ -87,6 +86,26 @@ public class SectionStudentController {
      */
     public static int getNumEnrolledInSection(String courseCode, String sectionId) {
         return SectionStudentDAO.getNumEnrolledInSection(courseCode, sectionId);
+    }
+    
+    /**
+     * Get lowest successful bid from the database
+     * @param courseCode Course Code
+     * @param sectionId Section of specified course
+     * @return the lowest successful bid amount
+     */
+    public static double getLowestSuccessBidAmount(String courseCode, String sectionId){
+        return SectionStudentDAO.getLowestSuccessBidAmount(courseCode, sectionId); 
+    }
+    
+    /**
+     * Get all enrolled student within the specified course and section
+     * @param courseCode Course Code
+     * @param sectionId Section of specified course
+     * @return list of enrolled student bids by section
+     */
+    public static ArrayList<Bid> getStudentEnrolledBySection(String courseCode, String sectionId){
+        return SectionStudentDAO.getStudentEnrolledBySection(courseCode, sectionId);
     }
 
 }

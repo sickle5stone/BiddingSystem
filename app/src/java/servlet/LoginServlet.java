@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- *
+ * Servlet class to handle all requests pertaining to login
  * @author Cheryl, Aloysius
  */
 @WebServlet(name = "LoginServlet", urlPatterns = {"/LoginServlet"})
@@ -62,7 +62,7 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        response.sendRedirect("/app/wrongmethod.jsp");
     }
 
     /**
@@ -86,6 +86,7 @@ public class LoginServlet extends HttpServlet {
         if (isValidLogin){
             String setUserAttribute = userType;
             session.setAttribute(setUserAttribute, userId);
+            session.setAttribute("firstLogin", "firstLogin");
             // set homepage to direct to depending on userType
             String homepage = userType.equals("student")? "studenthome.jsp": "adminhome.jsp";
             response.sendRedirect(homepage);

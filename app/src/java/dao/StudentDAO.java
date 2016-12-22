@@ -100,7 +100,7 @@ public class StudentDAO {
    
         try {
             conn = ConnectionManager.getConnection();
-            sql = "SELECT * from student";
+            sql = "SELECT * from student ORDER BY USER_ID";
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
             while (rs.next()) {

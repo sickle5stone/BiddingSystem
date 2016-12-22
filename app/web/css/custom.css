@@ -1,7 +1,37 @@
 
 .body{
-    background: url(../images/student-bg.jpg) repeat center center fixed;
-    background-color: #16a085;
+background-color: #081554;
+background-image: url(../images/brick-wall.png);
+}
+.pagebg{
+   background-image: url(../images/p1.jpg); 
+   background-color: #081554;
+}
+.showback {
+	background: #ffffff;
+	padding: 15px;
+	margin-bottom: 15px;
+	box-shadow: 0px 3px 2px #aab2bd;
+}
+.green{
+    color: #dff0d8;
+  background-color: #3c763d;
+}
+.blue{
+  color: #fff;
+  background-color: #2c3e50;
+  border-color: #428bca;
+}
+.red{
+  color: #a94442;
+  background-color: #f2dede;
+  border-color: #ebccd1;
+}
+.purple{
+    background-color:  #14144f;
+    color:#ffffff;
+    height: 55px;
+    width: 200px;
 }
 
 .features .glyphicon{
@@ -13,11 +43,38 @@
     color: #ffffff;
 }
 
-.panel-primary > .panel-heading {
-    font-size: 40px;
-    text-align: center;
-    background-color: #c0392b;
+
+
+.panel-heading{
+      font-size: 17px;
+   text-align: center;
+    background-color: #34495e;
     color: #ffffff;
+ 
+}
+
+.panel-headinggrey{
+      font-size: 17px;
+   text-align: center;
+    background-color: #ecf0f1;
+    color: #14144f;
+    padding:0.7px;
+ 
+}
+
+.panel-headingblue{
+      font-size: 17px;
+   text-align: center;
+    background-color: #9b59b6;
+    color: #2980b9;
+    padding:0.7px;
+ 
+}
+
+.fontStyle{
+  
+       font-size: 17px;
+   
 }
 
 .btn-primary {
@@ -26,7 +83,7 @@
 }
 
 .navbar {
-
+    
 }
 
 .navbar-right{
